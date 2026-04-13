@@ -1,97 +1,88 @@
 ---
 title: "Introduction"
-description: "Welcome to the new home for your documentation"
+description: "Build full-stack dApps on Stacks with auto-generated TypeScript bindings and one-command deployment"
 ---
 
-## Setting up
+# Scaffold Stacks
 
-Get your documentation site up and running in minutes.
+A Rust-powered CLI (`stacksdapp`) and Next.js template for building full-stack Stacks (Bitcoin L2) dApps — with auto-generated TypeScript contract bindings, a live debug UI, and one-command testnet deployment.
+
+## What is Scaffold Stacks?
+
+Scaffold Stacks provides everything you need to build decentralized applications on the Stacks blockchain. It combines a powerful CLI tool with a modern Next.js frontend template, making it easy to create, test, and deploy smart contracts.
+
+## Key Features
+
+- **Auto-generated TypeScript bindings**: Automatically generate type-safe TypeScript code from your Clarity contracts
+- **Live debug UI**: Interactive interface to test contract functions during development
+- **One-command deployment**: Deploy to testnet or mainnet with a single command
+- **Local development**: Run a full Stacks devnet locally with Docker
+- **Contract templates**: Start with pre-built SIP-010 tokens or SIP-009 NFTs
+
+## Quick Start
+
+Get started in 5 steps:
+
+1. Install the CLI
+2. Scaffold a new project
+3. Deploy to testnet
+4. Start the frontend
+5. Connect your wallet
 
 <Card
-  title="Start here"
+  title="Get started"
   icon="rocket"
   href="/quickstart"
-  horizontal
 >
-  Follow our three step quickstart guide.
+  Follow our 5-step quickstart guide to deploy your first dApp.
 </Card>
 
-## Make it yours
+## Prerequisites
 
-Design a docs site that looks great and empowers your users.
+Before you begin, ensure you have:
+
+- Rust 1.75+
+- Node.js 20+
+- Clarinet
+- A Stacks wallet (Leather or Xverse)
+
+<Card
+  title="Check prerequisites"
+  icon="check"
+  href="/prerequisites"
+>
+  Verify your development environment is ready.
+</Card>
+
+## Developer Workflow
 
 <Columns cols={2}>
   <Card
-    title="Edit locally"
+    title="Edit contracts"
     icon="pen-to-square"
     href="/development"
   >
-    Edit your docs locally and preview them in real time.
+    Modify Clarity contracts and see live updates.
   </Card>
   <Card
-    title="Customize your site"
-    icon="palette"
-    href="/essentials/settings"
+    title="Add contracts"
+    icon="plus"
+    href="/contracts"
   >
-    Customize the design and colors of your site to match your brand.
-  </Card>
-    <Card
-    title="Set up navigation"
-    icon="map"
-    href="/essentials/navigation"
-  >
-    Organize your docs to help users find what they need and succeed with your product.
+    Create new contracts with templates.
   </Card>
   <Card
-    title="API documentation"
-    icon="terminal"
-    href="/api-reference/introduction"
+    title="Run tests"
+    icon="flask"
+    href="/testing"
   >
-    Auto-generate API documentation from OpenAPI specifications.
+    Test your contracts and frontend.
+  </Card>
+  <Card
+    title="Deploy"
+    icon="cloud-upload"
+    href="/testnet"
+  >
+    Deploy to testnet or mainnet.
   </Card>
 </Columns>
-
-## Create beautiful pages
-
-Everything you need to create world-class documentation.
-
-<Columns cols={2}>
-  <Card
-    title="Write with MDX"
-    icon="pen-fancy"
-    href="/essentials/markdown"
-  >
-    Use MDX to style your docs pages.
-  </Card>
-  <Card
-    title="Code samples"
-    icon="code"
-    href="/essentials/code"
-  >
-    Add sample code to demonstrate how to use your product.
-  </Card>
-  <Card
-    title="Images"
-    icon="image"
-    href="/essentials/images"
-  >
-    Display images and other media.
-  </Card>
-  <Card
-    title="Reusable snippets"
-    icon="recycle"
-    href="/essentials/reusable-snippets"
-  >
-    Write once and reuse across your docs.
-  </Card>
-</Columns>
-
-## Need inspiration?
-
-<Card
-  title="See complete examples"
-  icon="stars"
-  href="https://mintlify.com/customers"
->
-  Browse our showcase of exceptional documentation sites.
-</Card>
