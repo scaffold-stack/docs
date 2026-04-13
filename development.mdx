@@ -136,11 +136,11 @@ Type-safe React hooks are generated for each contract function, making it easy t
 import { useCounterIncrement } from '@/generated/hooks'
 
 function CounterComponent() {
-  const { increment, isLoading } = useCounterIncrement()
+  const { data, loading, call } = useCounterIncrement()
   
   return (
-    <button onClick={() => increment({ n: 1 })}>
-      {isLoading ? 'Incrementing...' : 'Increment'}
+    <button onClick={() => call([{ n: 1 }])}>
+      {loading ? 'Incrementing...' : 'Increment'}
     </button>
   )
 }
