@@ -113,14 +113,17 @@ Here's a complete Clarity contract that demonstrates key concepts including sBTC
   (get author (map-get? messages id))
 )
 
-;; Read-only function to get message count at a specific Stacks block height
-(define-read-only (get-message-count-at-block (block uint))
-  (ok (at-block
-    (unwrap! (get-stacks-block-info? id-header-hash block) ERR_BLOCK_NOT_FOUND)
-    (var-get message-count)
-  ))
-)
 ```
+
+## Contract requirements
+
+For contracts that depend on external contracts (like sBTC), add requirements:
+
+```bash
+clarinet requirements add SM3VDXK3WZZSA84XXFKAFAF15NNZX32CTSG82JFQ4.sbtc-deposit
+```
+
+This wires up the official contracts for local testing and deployment.
 
 ## Key concepts
 
@@ -155,27 +158,77 @@ This contract uses sBTC (Stacks' 1:1 backed Bitcoin) for payments:
 Write tests in `contracts/tests/` using the Clarinet SDK:
 
 ```typescript
-import { Cl, ClarityType } from "@stacks/transactions";
-import { describe, expect, it } from "vitest";
+	import { Cl, ClarityType } from "@stacks/transactions";
+import { beforeEach, describe, expect, it } from "vitest";
+import { initSimnet } from '@stacks/clarinet-sdk';
 
-const accounts = simnet.getAccounts();
-const deployer = accounts.get("deployer")!;
-const address1 = accounts.get("wallet_1")!;
+let simnet: Awaited<ReturnType<typeof initSimnet>>;
+let accounts: ReturnType<Awaited<ReturnType<typeof initSimnet>>['getAccounts']>;
+let deployer: string;
+let address1: string;
 
-describe("message board tests", () => {
+beforeEach(async () => {
+  simnet = await initSimnet();
+  accounts = simnet.getAccounts();
+  deployer = accounts.get("deployer")!;
+  address1 = accounts.get("wallet_1")!;
+});
+
+describe("example tests", () => {
+  let content = "Hello Stacks Devs!"
+
   it("allows user to add a new message", () => {
-    const content = "Hello Stacks!";
-    
-    const result = simnet.callPublicFn(
-      "message-board",
+    let currentBurnBlockHeight = simnet.burnBlockHeight;
+
+    let confirmation = simnet.callPublicFn(
+      "realmessage",
       "add-message",
       [Cl.stringUtf8(content)],
       address1
-    );
+    )
 
-    expect(result.result).toHaveClarityType(ClarityType.ResponseOk);
+    const messageCount = simnet.getDataVar("realmessage", "message-count");
+    
+    expect(confirmation.result.type).toBe(ClarityType.ResponseOk);
+    expect(confirmation.result).toEqual(Cl.ok(messageCount));
+    expect(confirmation.events[1].data.value).toEqual(Cl.tuple({
+      author: Cl.standardPrincipal(address1),
+      event: Cl.stringAscii("[Stacks Dev Quickstart] New Message"),
+      id: messageCount,
+      message: Cl.stringUtf8(content),
+      time: Cl.uint(currentBurnBlockHeight),
+    }));
   });
+
+  it("allows contract owner to withdraw funds", () => {
+    simnet.callPublicFn(
+      "realmessage",
+      "add-message",
+      [Cl.stringUtf8(content)],
+      address1
+    )
+    
+    simnet.mineEmptyBurnBlocks(2);
+
+    let confirmation = simnet.callPublicFn(
+      "realmessage",
+      "withdraw-funds",
+      [],
+      deployer
+    )
+    
+    expect(confirmation.result).toEqual(Cl.ok(Cl.bool(true)));
+    expect(confirmation.events[0].event).toBe("ft_transfer_event")
+    expect(confirmation.events[0].data).toMatchObject({
+      amount: '1',
+      asset_identifier: 'SM3VDXK3WZZSA84XXFKAFAF15NNZX32CTSG82JFQ4.sbtc-token::sbtc-token',
+      recipient: deployer,
+      sender: `${deployer}.realmessage`,
+    })
+  })
 });
+
+	
 ```
 
 Run tests with:
@@ -183,13 +236,3 @@ Run tests with:
 ```bash
 stacksdapp test
 ```
-
-## Contract requirements
-
-For contracts that depend on external contracts (like sBTC), add requirements:
-
-```bash
-clarinet requirements add SM3VDXK3WZZSA84XXFKAFAF15NNZX32CTSG82JFQ4.sbtc-deposit
-```
-
-This wires up the official contracts for local testing and deployment.
