@@ -1,0 +1,74 @@
+---
+title: "Mainnet Deployment"
+description: "Launch your dApp on Stacks mainnet"
+---
+
+# Mainnet Deployment
+
+Deploy your production dApp to Stacks mainnet.
+
+<Warning>
+  **Mainnet deployments are permanent and costly.** Test thoroughly on testnet first.
+</Warning>
+
+## Prerequisites
+
+- Mainnet STX for deployment fees
+- Mainnet sBTC (if needed)
+- Mnemonic in `contracts/settings/Mainnet.toml`
+
+## Security checklist
+
+- [ ] Comprehensive testnet testing completed
+- [ ] All contracts audited (recommended)
+- [ ] Emergency functions implemented
+- [ ] Upgrade mechanisms planned
+- [ ] Sufficient STX for fees
+
+## Configure mainnet settings
+
+Add your mainnet mnemonic to `Mainnet.toml`:
+
+```toml
+[accounts.deployer]
+mnemonic = "your mainnet seed phrase"
+derivation = "m/44'/5757'/0'/0/0"
+```
+
+## Deploy to mainnet
+
+```bash
+stacksdapp deploy --network mainnet
+```
+
+Monitor deployment on [Stacks Explorer](https://explorer.stacks.co/).
+
+## Start production frontend
+
+```bash
+stacksdapp dev --network mainnet
+```
+
+## Post-deployment
+
+- Update frontend with mainnet addresses
+- Announce launch on social media
+- Monitor contract interactions
+- Plan for future upgrades
+
+## Emergency procedures
+
+If issues arise:
+
+1. Pause contract functions (if implemented)
+2. Assess impact
+3. Deploy fixes as new contract versions
+4. Communicate with users
+
+## Costs
+
+- Deployment: ~0.1-1 STX per contract
+- Function calls: Variable based on complexity
+- Storage: Paid by contract owner initially
+
+Monitor fees on [Stacks Explorer](https://explorer.stacks.co/).

@@ -1,0 +1,84 @@
+---
+title: "Testnet Deployment"
+description: "Deploy your dApp to Stacks testnet"
+---
+
+# Testnet Deployment
+
+Deploy to Stacks testnet to test your dApp with real network conditions before mainnet launch.
+
+## Prerequisites
+
+- Testnet STX for gas fees
+- Testnet sBTC (if your contracts use it)
+- Mnemonic in `contracts/settings/Testnet.toml`
+
+## Get testnet tokens
+
+1. Visit [Hiro Faucet](https://explorer.hiro.so/sandbox/faucet?chain=testnet)
+2. Request STX and sBTC
+3. Add your mnemonic to `Testnet.toml`:
+
+```toml
+[accounts.deployer]
+mnemonic = "your 24 word seed phrase"
+derivation = "m/44'/5757'/0'/0/0"
+```
+
+## Deploy to testnet
+
+```bash
+stacksdapp deploy --network testnet
+```
+
+This will:
+- Generate deployment plan
+- Submit transactions to testnet
+- Update `deployments.json` with addresses
+
+## Start frontend
+
+```bash
+stacksdapp dev --network testnet
+```
+
+Opens at `http://localhost:3000` connected to testnet.
+
+## Test interactions
+
+- Connect Leather/Xverse wallet (set to Testnet)
+- Use debug UI to call contract functions
+- Verify wallet prompts and confirmations
+
+## Iterate and redeploy
+
+Contracts are immutable, so changes create new versions:
+
+```bash
+# Edit contract
+# Deploy again
+stacksdapp deploy --network testnet
+# Creates counter-v2, counter-v3, etc.
+```
+
+The CLI handles versioning automatically.
+
+## Troubleshooting
+
+### Transaction failures
+
+- Check gas fees (increase if needed)
+- Verify mnemonic and derivation path
+- Ensure sufficient testnet balance
+
+### Contract errors
+
+- Use `stacksdapp check` for syntax validation
+- Test locally first with devnet
+- Check contract requirements
+
+### Frontend issues
+
+- Verify network configuration in `.env.local`
+- Check browser console for errors
+- Ensure wallet is set to testnet

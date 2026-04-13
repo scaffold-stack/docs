@@ -1,0 +1,75 @@
+---
+title: "Local Devnet"
+description: "Run a full Stacks blockchain locally"
+---
+
+# Local Devnet
+
+Run a complete Bitcoin + Stacks development environment locally with Docker.
+
+## Prerequisites
+
+- Docker Desktop installed and running
+- 8GB+ RAM recommended
+
+## Start devnet
+
+```bash
+stacksdapp dev
+```
+
+This starts:
+- Bitcoin node
+- Stacks node  
+- Frontend at `http://localhost:3000`
+- File watcher for auto-regeneration
+
+## Pre-funded accounts
+
+Devnet includes pre-funded accounts in `contracts/settings/Devnet.toml`:
+
+```toml
+[accounts.deployer]
+mnemonic = "twice kind fence tip hidden tilt action fragile skin nothing glory cousin green tomorrow spring wrist shed math olympic multiply hip blue scout claw"
+balance = 100000000000000
+
+[accounts.wallet_1]
+mnemonic = "sell invite acquire kitten bamboo drastic jelly vivid peace spawn twice guilt pave pen praise pork crisp unite giggle laundry steel scout cycle marry"
+balance = 100000000000000
+```
+
+## Deploy to devnet
+
+In another terminal:
+
+```bash
+stacksdapp deploy --network devnet
+```
+
+## Development workflow
+
+- Edit `.clar` files → auto-regeneration
+- Deploy changes instantly
+- Test with pre-funded accounts
+- No real STX needed
+
+## Stopping devnet
+
+```bash
+stacksdapp clean
+```
+
+Stops all services and removes containers.
+
+## When to use devnet
+
+- Complex multi-contract interactions
+- Bitcoin-specific features (sBTC, block data)
+- Offline development
+- Full stack simulation
+
+## Limitations
+
+- Slower than testnet (Docker overhead)
+- No real economic incentives
+- Limited to local machine
