@@ -1,0 +1,164 @@
+---
+title: "CLI Commands"
+description: "Complete reference for stacksdapp commands"
+---
+
+# CLI Command Reference
+
+## Project management
+
+### `stacksdapp new <name>`
+
+Scaffold a new Scaffold Stacks project.
+
+```bash
+stacksdapp new my-dapp
+```
+
+Creates a complete project structure with contracts and frontend.
+
+### `stacksdapp add <name>`
+
+Add a new Clarity contract.
+
+```bash
+stacksdapp add my-contract
+```
+
+Creates `contracts/contracts/my-contract.clar` and updates configuration.
+
+#### Templates
+
+```bash
+# SIP-010 fungible token
+stacksdapp add token --template sip010
+
+# SIP-009 NFT
+stacksdapp add nft --template sip009
+```
+
+## Development
+
+### `stacksdapp dev`
+
+Start development server.
+
+```bash
+# Testnet (default)
+stacksdapp dev --network testnet
+
+# Mainnet
+stacksdapp dev --network mainnet
+
+# Local devnet (requires Docker)
+stacksdapp dev
+```
+
+### `stacksdapp generate`
+
+Regenerate TypeScript bindings from contracts.
+
+```bash
+stacksdapp generate
+```
+
+Runs automatically during `dev` when contracts change.
+
+## Testing & validation
+
+### `stacksdapp test`
+
+Run all tests.
+
+```bash
+stacksdapp test
+```
+
+Runs contract tests (Clarinet SDK) and frontend tests (Vitest).
+
+### `stacksdapp check`
+
+Type-check Clarity contracts.
+
+```bash
+stacksdapp check
+```
+
+Validates syntax and types without deployment.
+
+## Deployment
+
+### `stacksdapp deploy`
+
+Deploy contracts to network.
+
+```bash
+# Testnet
+stacksdapp deploy --network testnet
+
+# Mainnet
+stacksdapp deploy --network mainnet
+
+# Devnet
+stacksdapp deploy --network devnet
+```
+
+### Networks
+
+- **testnet**: Hiro testnet infrastructure
+- **mainnet**: Stacks mainnet
+- **devnet**: Local Docker environment
+
+## Maintenance
+
+### `stacksdapp clean`
+
+Remove generated files and devnet state.
+
+```bash
+stacksdapp clean
+```
+
+### `stacksdapp --version`
+
+Show CLI version.
+
+```bash
+stacksdapp --version
+```
+
+## Configuration files
+
+### `Clarinet.toml`
+
+Contract configuration managed by CLI.
+
+### `contracts/settings/*.toml`
+
+Network-specific settings:
+
+- `Devnet.toml`: Local development
+- `Testnet.toml`: Testnet deployment  
+- `Mainnet.toml`: Mainnet deployment
+
+### `frontend/.env.local`
+
+Auto-managed network configuration.
+
+## Auto-generated files
+
+### `contracts.ts`
+
+Type-safe contract call wrappers.
+
+### `hooks.ts`
+
+React hooks for contract interactions.
+
+### `DebugContracts.tsx`
+
+Live debug UI component.
+
+### `deployments.json`
+
+Deployed contract addresses.

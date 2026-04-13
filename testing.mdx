@@ -1,0 +1,133 @@
+---
+title: "Testing"
+description: "Test your contracts and frontend"
+---
+
+# Testing
+
+Scaffold Stacks provides comprehensive testing for both Clarity contracts and the Next.js frontend.
+
+## Contract testing
+
+Contract tests run in Node.js using the Clarinet SDK — no Docker required.
+
+### Writing tests
+
+Tests are written in TypeScript in `contracts/tests/`:
+
+```typescript
+import { Cl, ClarityType } from "@stacks/transactions";
+import { describe, expect, it } from "vitest";
+
+const accounts = simnet.getAccounts();
+const deployer = accounts.get("deployer")!;
+const address1 = accounts.get("wallet_1")!;
+
+describe("counter tests", () => {
+  it("should increment counter", () => {
+    const result = simnet.callPublicFn(
+      "counter",
+      "increment",
+      [],
+      address1
+    );
+
+    expect(result.result).toHaveClarityType(ClarityType.ResponseOk);
+    expect(result.result).toBeOk(Cl.uint(1));
+  });
+
+  it("should get current count", () => {
+    const count = simnet.getDataVar("counter", "count");
+    expect(count).toBe(Cl.uint(1));
+  });
+});
+```
+
+### Running tests
+
+```bash
+stacksdapp test
+```
+
+This runs Vitest on both contract and frontend tests.
+
+## Frontend testing
+
+Frontend tests use Vitest and React Testing Library.
+
+### Example test
+
+```typescript
+import { render, screen } from "@testing-library/react";
+import { expect, test } from "vitest";
+import Counter from "./Counter";
+
+test("displays initial count", () => {
+  render(<Counter />);
+  expect(screen.getByText("Count: 0")).toBeInTheDocument();
+});
+```
+
+## Test utilities
+
+### Simnet API
+
+The `simnet` object provides:
+
+- `callPublicFn()` - Call public functions
+- `callReadOnlyFn()` - Call read-only functions  
+- `getDataVar()` - Read data variables
+- `getMapEntry()` - Read map entries
+- `mineEmptyBurnBlocks()` - Advance blocks
+- `getAccounts()` - Get test accounts
+
+### Clarity Types
+
+Use `@stacks/transactions` for type constructors:
+
+```typescript
+import { Cl } from "@stacks/transactions";
+
+// Primitives
+Cl.uint(42)
+Cl.int(-10)
+Cl.bool(true)
+Cl.stringAscii("hello")
+Cl.stringUtf8("hello 🌍")
+Cl.standardPrincipal("ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM")
+
+// Composites
+Cl.list([Cl.uint(1), Cl.uint(2)])
+Cl.tuple({ name: Cl.stringAscii("Alice"), age: Cl.uint(30) })
+```
+
+## Test coverage
+
+Aim for comprehensive coverage:
+
+- **Happy paths**: Normal operation
+- **Error cases**: Invalid inputs, insufficient funds
+- **Edge cases**: Maximum values, empty states
+- **Integration**: Multi-contract interactions
+
+## CI/CD
+
+Tests run automatically in CI. The project includes:
+
+- GitHub Actions workflow
+- Pre-configured Vitest config
+- TypeScript checking
+
+## Debugging tests
+
+Use `console.log()` in tests to debug:
+
+```typescript
+it("debug test", () => {
+  const result = simnet.callPublicFn("counter", "increment", [], address1);
+  console.log("Result:", result);
+  console.log("Events:", result.events);
+});
+```
+
+For complex contracts, test incrementally — add one function at a time.

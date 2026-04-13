@@ -1,0 +1,118 @@
+---
+title: "Code Generation"
+description: "How auto-generated TypeScript bindings work"
+---
+
+# Auto-Code Generation
+
+Scaffold Stacks automatically generates type-safe TypeScript code from your Clarity contracts.
+
+## How it works
+
+The `stacksdapp generate` command runs in four stages:
+
+### 1. Parse
+
+Extract ABIs from all contracts using `initSimnet()`:
+
+```typescript
+// Simulated execution to extract contract interfaces
+const abi = simnet.getContractAbi("counter");
+```
+
+### 2. Normalize
+
+Convert Clarity types to TypeScript:
+
+| Clarity | TypeScript |
+|---------|------------|
+| `uint` | `bigint` |
+| `int` | `bigint` |
+| `bool` | `boolean` |
+| `string-ascii` | `string` |
+| `string-utf8` | `string` |
+| `principal` | `string` |
+| `tuple` | `object` |
+| `list` | `array` |
+
+### 3. Render
+
+Generate three files using Tera templates:
+
+- **`contracts.ts`**: Direct call wrappers
+- **`hooks.ts`**: React hooks  
+- **`DebugContracts.tsx`**: Debug UI
+
+### 4. Write
+
+Update files only if content changed (preserves hot reload).
+
+## Generated files
+
+### contracts.ts
+
+Type-safe wrappers for contract calls:
+
+```typescript
+// contracts.ts
+export const counterContract = (network: string) => ({
+  increment: async (options: { sender: string }) => {
+    // Type-safe call with proper encoding
+  },
+  getCount: async () => {
+    // Read-only call
+  }
+});
+```
+
+### hooks.ts
+
+React hooks for easy integration:
+
+```typescript
+// hooks.ts
+export const useCounterIncrement = () => {
+  return useMutation({
+    mutationFn: counterContract(network).increment
+  });
+};
+```
+
+### DebugContracts.tsx
+
+Interactive debug panel:
+
+```tsx
+// DebugContracts.tsx
+export const DebugContracts = () => (
+  <div>
+    <ContractPanel name="counter">
+      <FunctionButton name="increment" />
+      <ReadOnlyField name="getCount" />
+    </ContractPanel>
+  </div>
+);
+```
+
+## File watcher
+
+During `stacksdapp dev`, the file watcher:
+
+1. Monitors `.clar` files for changes
+2. Debounces rapid edits
+3. Runs code generation
+4. Triggers Next.js hot reload
+
+## Customization
+
+The generation is driven by Tera templates in the CLI. Advanced users can:
+
+- Extend type mappings
+- Add custom hooks
+
+## Performance
+
+- SHA-256 hashing prevents unnecessary writes
+- Incremental generation on changes only
+- Fast TypeScript compilation
+- Optimized for development workflow
