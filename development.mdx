@@ -1,94 +1,165 @@
 ---
-title: 'Development'
-description: 'Preview changes locally to update your docs'
+title: "Next Steps"
+description: "Edit contracts, add features, and iterate quickly"
 ---
 
-<Info>
-  **Prerequisites**:
-  - Node.js version 19 or higher
-  - A docs repository with a `docs.json` file
-</Info>
+# Developer Workflow
 
-Follow these steps to install and run Mintlify on your operating system.
+Scaffold Stacks provides a streamlined development experience with live reloading, auto-generated bindings, and comprehensive testing.
 
-<Steps>
-<Step title="Install the Mintlify CLI">
+## Edit contracts → see live updates
+
+Open any `.clar` file in your `contracts/contracts/` directory and add a function:
+
+```clarity
+(define-public (multiply (n uint))
+  (begin
+    (var-set counter (* (var-get counter) n))
+    (ok (var-get counter))))
+```
+
+Redeploy to see changes (generate runs automatically):
 
 ```bash
-npm i -g mint
+stacksdapp deploy --network testnet
 ```
-</Step>
 
-<Step title="Preview locally">
+The `multiply` function appears in the debug UI with typed inputs after redeployment.
 
-Navigate to your docs directory where your `docs.json` file is located, and run the following command:
+## Add a new contract
+
+Create new contracts with built-in templates:
 
 ```bash
-mint dev
+# Blank contract
+stacksdapp add relayer
+
+# SIP-010 fungible token
+stacksdapp add token --template sip010
+
+# SIP-009 NFT
+stacksdapp add nft --template sip009
 ```
 
-A local preview of your documentation will be available at `http://localhost:3000`.
+Each command:
+- Creates the `.clar` file in `contracts/contracts/`
+- Updates `Clarinet.toml`
+- Regenerates all TypeScript bindings
+- Updates the debug UI
 
-</Step>
-</Steps>
+## Run tests
 
-## Custom ports
-
-By default, Mintlify uses port 3000. You can customize the port Mintlify runs on by using the `--port` flag. For example, to run Mintlify on port 3333, use this command:
+Test both contracts and frontend:
 
 ```bash
-mint dev --port 3333
+stacksdapp test
 ```
 
-If you attempt to run Mintlify on a port that's already in use, it will use the next available port:
+This runs:
+- Contract tests in `contracts/tests/` (Clarinet SDK)
+- Frontend tests in `frontend/` (Vitest)
 
-```md
-Port 3000 is already in use. Trying 3001 instead.
-```
+## Type-check contracts
 
-## Mintlify versions
-
-Please note that each CLI release is associated with a specific version of Mintlify. If your local preview does not align with the production version, please update the CLI:
+Validate Clarity syntax and types:
 
 ```bash
-npm mint update
+stacksdapp check
 ```
 
-## Validating links
+## Iterate and redeploy
 
-The CLI can assist with validating links in your documentation. To identify any broken links, use the following command:
+Since Stacks contracts are immutable, redeploying creates versioned contracts:
 
 ```bash
-mint broken-links
+stacksdapp deploy --network testnet
+# Creates counter-v2, counter-v3, etc.
 ```
 
-## Deployment
+The CLI handles versioning automatically.
 
-If the deployment is successful, you should see the following:
+## Project structure
+
+```
+my-app/
+├── contracts/
+│   ├── Clarinet.toml
+│   ├── settings/
+│   │   ├── Devnet.toml    # Pre-funded local accounts
+│   │   ├── Testnet.toml   # Add your mnemonic
+│   │   └── Mainnet.toml   # Add your mnemonic
+│   ├── contracts/
+│   │   └── counter.clar   # Your Clarity contracts
+│   └── tests/
+│       └── counter.test.ts
+└── frontend/
+    ├── .env.local         # Auto-managed network config
+    └── src/
+        ├── app/
+        ├── components/
+        │   └── WalletConnect.tsx
+        └── generated/     # Auto-generated bindings
+            ├── contracts.ts
+            ├── hooks.ts
+            ├── DebugContracts.tsx
+            └── deployments.json
+```
+
+## Auto-code generation
+
+The `stacksdapp generate` command:
+
+1. **Parse**: Extract ABIs from all contracts using `initSimnet()`
+2. **Normalize**: Convert Clarity types to TypeScript (uint128 → bigint, tuples → objects)
+3. **Render**: Generate `contracts.ts`, `hooks.ts`, and `DebugContracts.tsx`
+4. **Write**: Update files only if content changed (fast hot reload)
+
+The file watcher runs this automatically on every `.clar` save during `stacksdapp dev`.
+
+## Frontend Features
+
+Scaffold Stacks automatically generates a complete frontend development environment:
+
+### Debug UI
+
+A live debug interface is auto-generated from your contracts, allowing you to interact with all contract functions on-the-go. Every public function gets a typed input form, and read-only functions display results directly.
 
 <Frame>
-  <img src="/images/checks-passed.png" alt="Screenshot of a deployment confirmation message that says All checks have passed." style={{ borderRadius: '0.5rem' }} />
+  <img src="/images/screen.png" alt="Debug UI showing contract interaction forms" />
 </Frame>
 
-## Code formatting
+### Reusable Hooks
 
-We suggest using extensions on your IDE to recognize and format MDX. If you're a VSCode user, consider the [MDX VSCode extension](https://marketplace.visualstudio.com/items?itemName=unifiedjs.vscode-mdx) for syntax highlighting, and [Prettier](https://marketplace.visualstudio.com/items?itemName=esbenp.prettier-vscode) for code formatting.
+Type-safe React hooks are generated for each contract function, making it easy to integrate contract calls throughout your application:
 
-## Troubleshooting
+```typescript
+import { useCounterIncrement } from '@/generated/hooks'
 
-<AccordionGroup>
-  <Accordion title='Error: Could not load the "sharp" module using the darwin-arm64 runtime'>
-
-    This may be due to an outdated version of node. Try the following:
-    1. Remove the currently-installed version of the CLI: `npm remove -g mint`
-    2. Upgrade to Node v19 or higher.
-    3. Reinstall the CLI: `npm i -g mint`
-  </Accordion>
-
-  <Accordion title="Issue: Encountering an unknown error">
+function CounterComponent() {
+  const { increment, isLoading } = useCounterIncrement()
   
-    Solution: Go to the root of your device and delete the `~/.mintlify` folder. Then run `mint dev` again.
-  </Accordion>
-</AccordionGroup>
+  return (
+    <button onClick={() => increment({ n: 1 })}>
+      {isLoading ? 'Incrementing...' : 'Increment'}
+    </button>
+  )
+}
+```
 
-Curious about what changed in the latest CLI version? Check out the [CLI changelog](https://www.npmjs.com/package/mintlify?activeTab=versions).
+### Wallet Connect Component
+
+A reusable `WalletConnect.tsx` component handles wallet connections with support for Leather and Xverse wallets, including automatic network detection.
+
+### State Management
+
+Jotai atoms are used for global state management, providing a simple and powerful way to manage application state across components.
+
+## Local development
+
+For offline development with full Bitcoin + Stacks simulation:
+
+```bash
+stacksdapp dev  # Starts local devnet + frontend + watcher
+```
+
+Requires Docker. Pre-funded accounts available in `Devnet.toml`.
