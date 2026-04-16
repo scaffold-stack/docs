@@ -81,6 +81,11 @@
       }
     ]
   },
+  "seo": {
+    "metatags": {
+      "talentapp:project_verification": "13cb3ae97c796bbb005150408fea9b069cb372ca4bb9e80922f3f9e2d114c42ddd3d1eba48b89ae41a9d841ea95db44ef2fc1bf343eefb123eca8ef288e5ec4c"
+    }
+  },
   "contextual": {
     "options": [
      "copy",
