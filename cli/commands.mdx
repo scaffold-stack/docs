@@ -101,7 +101,19 @@ stacksdapp deploy --network mainnet
 
 # Devnet
 stacksdapp deploy --network devnet
+
+# Deploy a single contract by name
+stacksdapp deploy --network testnet --contract counter
+
+# Preview deployment plan without broadcasting
+stacksdapp deploy --network testnet --dry-run
 ```
+
+#### Deploy options
+
+- `--network <network>`: Target network (`testnet`, `mainnet`, or `devnet`)
+- `--contract <name>`: Deploy only one contract from your project
+- `--dry-run`: Generate and print deployment plan, estimated fee, and contract list without broadcasting transactions
 
 ### Networks
 
