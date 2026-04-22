@@ -58,10 +58,22 @@ Deploy your contracts:
 stacksdapp deploy --network testnet
 ```
 
+Preview first without broadcasting:
+
+```bash
+stacksdapp deploy --network testnet --dry-run
+```
+
 This will:
 - Generate a deployment plan
 - Deploy to testnet
 - Update `frontend/src/generated/deployments.json` with contract addresses
+
+Deploy a single contract when iterating:
+
+```bash
+stacksdapp deploy --network testnet --contract counter
+```
 
 ## 5 — Start the frontend
 
