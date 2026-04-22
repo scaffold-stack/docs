@@ -31,10 +31,22 @@ derivation = "m/44'/5757'/0'/0/0"
 stacksdapp deploy --network testnet
 ```
 
+Preview the deployment first (no broadcast):
+
+```bash
+stacksdapp deploy --network testnet --dry-run
+```
+
 This will:
 - Generate deployment plan
 - Submit transactions to testnet
 - Update `deployments.json` with addresses
+
+Deploy a single contract by name:
+
+```bash
+stacksdapp deploy --network testnet --contract counter
+```
 
 ## Start frontend
 
