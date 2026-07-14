@@ -3,86 +3,48 @@ title: "Introduction"
 description: "Build full-stack dApps on Stacks with auto-generated TypeScript bindings and one-command deployment"
 ---
 
-# Scaffold Stacks
+Scaffold Stacks is a Rust CLI (`stacksdapp`) and Next.js template for building full-stack Stacks (Bitcoin L2) dApps. It generates type-safe TypeScript bindings from Clarity contracts, ships a live debug UI, and supports one-command deployment to testnet, mainnet, or local devnet.
 
-A Rust-powered CLI (`stacksdapp`) and Next.js template for building full-stack Stacks (Bitcoin L2) dApps — with auto-generated TypeScript contract bindings, a live debug UI, and one-command testnet deployment.
+If you are new, start with the quickstart. If you already have a Clarinet project, use the adopt guide. For command syntax, see the CLI reference tab.
 
-## What is Scaffold Stacks?
+### Looking for guides on...
 
-Scaffold Stacks provides everything you need to build decentralized applications on the Stacks blockchain. It combines a powerful CLI tool with a modern Next.js frontend template, making it easy to create, test, and deploy smart contracts.
-
-## Key Features
-
-- **Auto-generated TypeScript bindings**: Automatically generate type-safe TypeScript code from your Clarity contracts
-- **Live debug UI**: Interactive interface to test contract functions during development
-- **One-command deployment**: Deploy to testnet or mainnet with a single command
-- **Local development**: Run a full Stacks devnet locally with Docker
-- **Contract templates**: Start with pre-built SIP-010 tokens or SIP-009 NFTs
-
-## Quick Start
-
-Get started in 5 steps:
-
-1. Install the CLI
-2. Scaffold a new project
-3. Deploy to testnet
-4. Start the frontend
-5. Connect your wallet
-
-<Card
-  title="Get started"
-  icon="rocket"
-  href="/quickstart"
->
-  Follow our 5-step quickstart guide to deploy your first dApp.
-</Card>
-
-## Prerequisites
-
-Before you begin, ensure you have:
-
-- Rust 1.75+
-- Node.js 20+
-- Clarinet
-- A Stacks wallet (Leather or Xverse)
-
-<Card
-  title="Check prerequisites"
-  icon="check"
-  href="/prerequisites"
->
-  Verify your development environment is ready.
-</Card>
-
-## Developer Workflow
-
-<Columns cols={2}>
-  <Card
-    title="Edit contracts"
-    icon="pen-to-square"
-    href="/development"
-  >
-    Modify Clarity contracts and see live updates.
+<CardGroup cols={2}>
+  <Card title="Quickstart" icon="rocket" href="/quickstart">
+    Deploy your first dApp to testnet in five steps.
   </Card>
-  <Card
-    title="Add contracts"
-    icon="plus"
-    href="/contracts"
-  >
-    Create new contracts with templates.
+  <Card title="Prerequisites" icon="check" href="/prerequisites">
+    Install Rust, Node, Clarinet 3.21+, and verify with `stacksdapp doctor`.
   </Card>
-  <Card
-    title="Run tests"
-    icon="flask"
-    href="/testing"
-  >
-    Test your contracts and frontend.
+  <Card title="Developer workflow" icon="pen-to-square" href="/development">
+    Edit contracts, regenerate bindings, run tests, and redeploy.
   </Card>
-  <Card
-    title="Deploy"
-    icon="cloud-upload"
-    href="/testnet"
-  >
-    Deploy to testnet or mainnet.
+  <Card title="Code generation" icon="code" href="/code-generation">
+    TypeScript bindings, React hooks, debug UI, and ABI caching.
   </Card>
-</Columns>
+  <Card title="Adopt existing project" icon="folder-open" href="/adopt-existing">
+    Bring a Clarinet repo onto Scaffold Stacks with `stacksdapp init`.
+  </Card>
+  <Card title="CLI reference" icon="terminal" href="/cli/commands">
+    Command flags and configuration file paths.
+  </Card>
+</CardGroup>
+
+## Key features
+
+- **Auto-generated TypeScript bindings**: Type-safe code from Clarity ABIs, with ABI caching for fast regenerate
+- **Live debug UI**: Interactive forms for every contract function
+- **One-command deployment**: Testnet, mainnet, or local Docker devnet (optional `--auto-deploy`)
+- **Contract templates**: SIP-010 tokens and SIP-009 NFTs
+- **Adopt existing Clarinet projects**: `stacksdapp init` without starting from scratch
+
+## Requirements
+
+| Tool | Minimum |
+| --- | --- |
+| Rust | 1.75+ |
+| Node.js | 20+ |
+| Clarinet | 3.21+ |
+| Wallet | Leather or Xverse |
+
+Need help? Join the [Scaffold Stacks Telegram group](https://telegram.me/+CBp6wSIiXNhmMjZk).

@@ -3,48 +3,92 @@ title: "Prerequisites"
 description: "Set up your development environment for Scaffold Stacks"
 ---
 
-# Prerequisites
+Install the tools below before using Scaffold Stacks. All versions listed are minimums.
 
-Before using Scaffold Stacks, ensure your development environment has the required tools installed.
+## Contents
+
+- [Requirements](#requirements)
+- [Install the CLI](#install-the-cli)
+- [Verify installation](#verify-installation)
+- [Rust](#rust)
+- [Node.js](#nodejs)
+- [Clarinet](#clarinet)
+- [Stacks wallet](#stacks-wallet)
+- [Docker (optional)](#docker-optional)
+
+## Requirements
+
+| Tool | Minimum version | Required for |
+| --- | --- | --- |
+| Rust | 1.75+ | Building and installing the CLI |
+| Node.js | 20+ | Frontend and contract tests |
+| Clarinet | 3.21+ | Contract toolchain |
+| Leather or Xverse | latest | Testnet and mainnet wallet flows |
+| Docker Desktop | latest | Local devnet only |
+
+## Install the CLI
+
+```bash
+cargo install stacksdapp
+stacksdapp --version
+```
+
+Or build from source:
+
+```bash
+git clone https://github.com/scaffold-stack/scaffold-stack.git
+cd scaffold-stack
+cargo install --path cli
+```
+
+## Verify installation
+
+```bash
+stacksdapp doctor
+```
+
+Checks Rust, Node.js, Clarinet 3.21+, Docker (for devnet), and git.
+
+To verify manually:
+
+```bash
+rustc --version && node --version && clarinet --version
+```
+
+If `doctor` passes, continue to the [quickstart](/quickstart).
 
 ## Rust
-
-Scaffold Stacks is built with Rust. Install Rust 1.75 or later:
 
 ```bash
 curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 rustup update
 ```
 
-Verify installation:
+Verify:
 
 ```bash
-rustc --version  # Should show 1.75+
+rustc --version
 ```
 
 ## Node.js
-
-The frontend template requires Node.js 20 or later:
 
 ```bash
 # Using nvm (recommended)
 curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.0/install.sh | bash
 nvm install 20
 nvm use 20
-
-# Or download from nodejs.org
 ```
 
 Verify:
 
 ```bash
-node --version  # v20+
-npm --version   # 10+
+node --version
+npm --version
 ```
 
 ## Clarinet
 
-Clarinet is the development toolchain for Clarity contracts:
+Scaffold Stacks templates target Clarinet SDK 3.21.
 
 ```bash
 # macOS with Homebrew
@@ -59,35 +103,21 @@ cargo install --path .
 Verify:
 
 ```bash
-clarinet --version  # clarinet 3.x
+clarinet --version
 ```
 
-## Stacks Wallet
+## Stacks wallet
 
-You'll need a Stacks-compatible wallet for testing:
+Install a browser wallet and create a testnet account:
 
-- [Leather](https://leather.io/) - Recommended for development
-- [Xverse](https://www.xverse.app/) - Alternative option
+- [Leather](https://leather.io/)
+- [Xverse](https://www.xverse.app/)
 
-Install the browser extension and create a testnet account.
+## Docker (optional)
 
-## Docker (Optional)
-
-Required only for local devnet development:
+Required only for [local devnet](/local-devnet):
 
 ```bash
 # macOS
 brew install --cask docker
-
-# Or download from docker.com
 ```
-
-## Verification
-
-Run this command to verify all prerequisites:
-
-```bash
-rustc --version && node --version && clarinet --version
-```
-
-If all commands succeed, you're ready to get started!

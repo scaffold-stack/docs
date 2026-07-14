@@ -1,0 +1,61 @@
+---
+title: "Upgrade a project"
+description: "Refresh dependencies and regenerate TypeScript bindings with stacksdapp upgrade"
+---
+
+Run `stacksdapp upgrade` on an existing Scaffold Stacks project to refresh npm dependencies and regenerate TypeScript bindings. It does not rescaffold your repo or overwrite application code.
+
+## Contents
+
+- [Requirements](#requirements)
+- [Run upgrade](#run-upgrade)
+- [When to use it](#when-to-use-it)
+- [Init vs upgrade](#init-vs-upgrade)
+- [After upgrading](#after-upgrading)
+
+## Requirements
+
+Your project must already use the scaffold layout:
+
+| Path | Required |
+| --- | --- |
+| `contracts/Clarinet.toml` | Yes |
+| `frontend/package.json` | Yes |
+
+Clarinet **3.21+** is required. Run `stacksdapp doctor` to verify your toolchain.
+
+## Run upgrade
+
+```bash
+cd my-dapp
+stacksdapp upgrade
+```
+
+The command:
+
+1. Refreshes npm dependencies in `frontend/` and `contracts/`
+2. Runs `npm ci` when a `package-lock.json` is present
+3. Runs `stacksdapp generate`
+
+You should see install progress for both packages, then codegen output.
+
+## When to use it
+
+- After installing a newer `stacksdapp` release
+- After Clarinet or `@stacks/clarinet-sdk` template updates
+- When generated files no longer match your `.clar` sources
+
+## Init vs upgrade
+
+| Command | Use case |
+| --- | --- |
+| [`stacksdapp init`](/adopt-existing) | First time adopting an existing Clarinet project |
+| `stacksdapp upgrade` | Project is already scaffolded; refresh deps and bindings |
+
+## After upgrading
+
+```bash
+stacksdapp check
+stacksdapp test
+stacksdapp generate --watch   # optional: keep bindings in sync while editing
+```

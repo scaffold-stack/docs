@@ -1,0 +1,79 @@
+---
+title: "Testing"
+description: "Run Clarity contract tests and frontend Vitest suites with stacksdapp test"
+---
+
+`stacksdapp test` runs contract tests (Clarinet SDK) and frontend tests (Vitest). No Docker or local devnet is required for contract tests.
+
+## Contents
+
+- [Run all tests](#run-all-tests)
+- [Contract tests](#contract-tests)
+- [ABI caching](#abi-caching)
+- [Type-check before testing](#type-check-before-testing)
+- [Frontend tests](#frontend-tests)
+- [Tips](#tips)
+
+## Run all tests
+
+```bash
+stacksdapp test
+```
+
+This runs:
+
+- **Contracts**: Vitest + Clarinet SDK (`initSimnet()`) in `contracts/tests/`
+- **Frontend**: Vitest in `frontend/` (`vitest run --passWithNoTests`)
+
+## Contract tests
+
+Tests live under `contracts/tests/`.
+
+```typescript
+import { Cl, ClarityType } from "@stacks/transactions";
+import { beforeEach, describe, expect, it } from "vitest";
+import { initSimnet } from "@stacks/clarinet-sdk";
+
+let simnet: Awaited<ReturnType<typeof initSimnet>>;
+let accounts: ReturnType<Awaited<ReturnType<typeof initSimnet>>["getAccounts"]>;
+let deployer: string;
+let address1: string;
+
+beforeEach(async () => {
+  simnet = await initSimnet();
+  accounts = simnet.getAccounts();
+  deployer = accounts.get("deployer")!;
+  address1 = accounts.get("wallet_1")!;
+});
+
+describe("counter", () => {
+  it("increments", () => {
+    const result = simnet.callPublicFn("counter", "increment", [], address1);
+    expect(result.result.type).toBe(ClarityType.ResponseOk);
+  });
+});
+```
+
+Requires Clarinet **3.21+** and matching `@stacks/clarinet-sdk` in the contracts package.
+
+## ABI caching
+
+Contract ABIs are cached under `contracts/.cache/`. Unchanged sources skip redundant `initSimnet` runs during generate and test workflows.
+
+## Type-check before testing
+
+```bash
+stacksdapp check
+```
+
+Validates Clarity syntax and types without deployment.
+
+## Frontend tests
+
+Frontend Vitest suites live under `frontend/`. They run as part of `stacksdapp test` even if you have not written tests yet.
+
+## Tips
+
+- Use simnet tests for contract logic
+- Use [local devnet](/local-devnet) or [testnet](/testnet) for full wallet flows
+- After editing contracts, run `stacksdapp generate` so bindings stay aligned with tests that import generated code

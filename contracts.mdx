@@ -3,9 +3,15 @@ title: "Contracts"
 description: "Create and manage Clarity smart contracts"
 ---
 
-# Working with Contracts
+Add, test, and deploy Clarity contracts with auto-generated TypeScript bindings.
 
-Scaffold Stacks makes it easy to create, test, and deploy Clarity smart contracts with auto-generated TypeScript bindings.
+## Contents
+
+- [Creating contracts](#creating-contracts)
+- [Sample contract](#sample-contract)
+- [Contract requirements](#contract-requirements)
+- [Key concepts](#key-concepts)
+- [Testing contracts](#testing-contracts)
 
 ## Creating contracts
 
@@ -22,7 +28,7 @@ stacksdapp add my-token --template sip010
 stacksdapp add my-nft --template sip009
 ```
 
-## Sample contract: Message Board
+## Sample contract
 
 Here's a complete Clarity contract that demonstrates key concepts including sBTC payments, data storage, and read-only functions. This is based on the official Stacks Developer Quickstart.
 
@@ -157,83 +163,34 @@ This contract uses sBTC (Stacks' 1:1 backed Bitcoin) for payments:
 
 ## Testing contracts
 
-Write tests in `contracts/tests/` using the Clarinet SDK:
+Write tests in `contracts/tests/` using the Clarinet SDK (3.21+). Full patterns, ABI caching, and frontend Vitest coverage live in [Testing](/testing).
 
 ```typescript
-	import { Cl, ClarityType } from "@stacks/transactions";
+import { Cl, ClarityType } from "@stacks/transactions";
 import { beforeEach, describe, expect, it } from "vitest";
-import { initSimnet } from '@stacks/clarinet-sdk';
+import { initSimnet } from "@stacks/clarinet-sdk";
 
 let simnet: Awaited<ReturnType<typeof initSimnet>>;
-let accounts: ReturnType<Awaited<ReturnType<typeof initSimnet>>['getAccounts']>;
-let deployer: string;
 let address1: string;
 
 beforeEach(async () => {
   simnet = await initSimnet();
-  accounts = simnet.getAccounts();
-  deployer = accounts.get("deployer")!;
-  address1 = accounts.get("wallet_1")!;
+  address1 = simnet.getAccounts().get("wallet_1")!;
 });
 
-describe("example tests", () => {
-  let content = "Hello Stacks Devs!"
-
+describe("message", () => {
   it("allows user to add a new message", () => {
-    let currentBurnBlockHeight = simnet.burnBlockHeight;
-
-    let confirmation = simnet.callPublicFn(
+    const content = "Hello Stacks Devs!";
+    const confirmation = simnet.callPublicFn(
       "message",
       "add-message",
       [Cl.stringUtf8(content)],
       address1
-    )
-
-    const messageCount = simnet.getDataVar("message", "message-count");
-    
+    );
     expect(confirmation.result.type).toBe(ClarityType.ResponseOk);
-    expect(confirmation.result).toEqual(Cl.ok(messageCount));
-    expect(confirmation.events[1].data.value).toEqual(Cl.tuple({
-      author: Cl.standardPrincipal(address1),
-      event: Cl.stringAscii("[Stacks Dev Quickstart] New Message"),
-      id: messageCount,
-      message: Cl.stringUtf8(content),
-      time: Cl.uint(currentBurnBlockHeight),
-    }));
   });
-
-  it("allows contract owner to withdraw funds", () => {
-    simnet.callPublicFn(
-      "message",
-      "add-message",
-      [Cl.stringUtf8(content)],
-      address1
-    )
-    
-    simnet.mineEmptyBurnBlocks(2);
-
-    let confirmation = simnet.callPublicFn(
-      "message",
-      "withdraw-funds",
-      [],
-      deployer
-    )
-    
-    expect(confirmation.result).toEqual(Cl.ok(Cl.bool(true)));
-    expect(confirmation.events[0].event).toBe("ft_transfer_event")
-    expect(confirmation.events[0].data).toMatchObject({
-      amount: '1',
-      asset_identifier: 'SM3VDXK3WZZSA84XXFKAFAF15NNZX32CTSG82JFQ4.sbtc-token::sbtc-token',
-      recipient: deployer,
-      sender: `${deployer}.message`,
-    })
-  })
 });
-
-	
 ```
-
-Run tests with:
 
 ```bash
 stacksdapp test

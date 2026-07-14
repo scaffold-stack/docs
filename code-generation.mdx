@@ -1,0 +1,160 @@
+---
+title: "Code generation"
+description: "How stacksdapp generate turns Clarity ABIs into TypeScript bindings and a debug UI"
+---
+
+`stacksdapp generate` parses Clarity contract ABIs and writes type-safe TypeScript bindings plus a debug UI under `frontend/src/generated/`.
+
+## Contents
+
+- [Generate once](#generate-once)
+- [Watch mode](#watch-mode)
+- [How it works](#how-it-works)
+- [Generated files](#generated-files)
+- [Using hooks in your UI](#using-hooks-in-your-ui)
+- [Hiro API key (optional)](#hiro-api-key-optional)
+- [Stale deployments](#stale-deployments)
+- [File watcher during dev](#file-watcher-during-dev)
+
+## Generate once
+
+```bash
+stacksdapp generate
+```
+
+When `package-lock.json` exists under `contracts/` or `frontend/`, generate runs `npm ci` before exporting ABIs.
+
+## Watch mode
+
+Regenerate on every `.clar` change without the full `dev` supervisor:
+
+```bash
+stacksdapp generate --watch
+```
+
+During `stacksdapp dev`, the file watcher already regenerates bindings on save.
+
+## How it works
+
+### 1. Parse
+
+Extract ABIs from all contracts using `initSimnet()`:
+
+```typescript
+const abi = simnet.getContractAbi("counter");
+```
+
+ABIs are cached in `contracts/.cache/`. Unchanged sources skip redundant `initSimnet` runs.
+
+### 2. Normalize
+
+| Clarity | TypeScript |
+|---------|------------|
+| `uint` | `bigint` |
+| `int` | `bigint` |
+| `bool` | `boolean` |
+| `string-ascii` | `string` |
+| `string-utf8` | `string` |
+| `principal` | `string` |
+| `tuple` | `object` |
+| `list` | `array` |
+
+### 3. Render
+
+Tera templates produce three files under `frontend/src/generated/`:
+
+- `contracts.ts`: typed call wrappers
+- `hooks.ts`: React hooks
+- `DebugContracts.tsx`: live debug panel
+
+### 4. Write
+
+SHA-256 hashing writes only when content changes. This keeps Next.js hot reload fast.
+
+## Generated files
+
+### contracts.ts
+
+```typescript
+export const counterContract = (network: string) => ({
+  increment: async (options: { sender: string }) => {
+    // Type-safe call with proper encoding
+  },
+  getCount: async () => {
+    // Read-only call
+  },
+});
+```
+
+### hooks.ts
+
+```typescript
+export const useCounterIncrement = () => {
+  return useMutation({
+    mutationFn: counterContract(network).increment,
+  });
+};
+```
+
+### DebugContracts.tsx
+
+```tsx
+export const DebugContracts = () => (
+  <div>
+    <ContractPanel name="counter">
+      <FunctionButton name="increment" />
+      <ReadOnlyField name="getCount" />
+    </ContractPanel>
+  </div>
+);
+```
+
+### deployments.json
+
+Contract addresses written by `stacksdapp deploy`.
+
+## Using hooks in your UI
+
+```typescript
+import { useCounterIncrement } from "@/generated/hooks";
+
+function CounterComponent() {
+  const { data, loading, call } = useCounterIncrement();
+
+  return (
+    <button onClick={() => call([{ n: 1 }])}>
+      {loading ? "Incrementing..." : "Increment"}
+    </button>
+  );
+}
+```
+
+## Hiro API key (optional)
+
+For higher rate limits on read-only Stacks calls, set in `frontend/.env.local`:
+
+```bash
+NEXT_PUBLIC_HIRO_API_KEY=your_key_here
+```
+
+The template passes this through `getReadOnlyNetwork` (`@stacks/network` v7).
+
+## Stale deployments
+
+If on-chain addresses in `deployments.json` no longer match your contracts, redeploy:
+
+```bash
+stacksdapp deploy --network testnet
+stacksdapp deploy --network devnet
+```
+
+## File watcher during dev
+
+1. Monitors `.clar` files
+2. Debounces rapid edits
+3. Runs code generation
+4. Triggers Next.js hot reload
+
+<Warning>
+  Do not edit files under `frontend/src/generated/` by hand. They are overwritten on the next generate.
+</Warning>

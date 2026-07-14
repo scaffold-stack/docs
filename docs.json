@@ -1,13 +1,33 @@
 {
   "$schema": "https://mintlify.com/docs.json",
-  "theme": "mint",
+  "theme": "maple",
   "name": "Scaffold Stacks",
   "colors": {
-    "primary": "#FF6B35",
-    "light": "#FFA07A",
-    "dark": "#CC5529"
+    "primary": "#FC6432",
+    "light": "#FF8F66",
+    "dark": "#D33D00"
   },
   "favicon": "/favicon.svg",
+  "fonts": {
+    "family": "Inter",
+    "heading": {
+      "family": "Inter",
+      "weight": 600
+    },
+    "body": {
+      "family": "Inter",
+      "weight": 400
+    }
+  },
+  "background": {
+    "color": {
+      "light": "#FFFFFF",
+      "dark": "#121212"
+    }
+  },
+  "appearance": {
+    "default": "system"
+  },
   "search": {
     "enabled": true
   },
@@ -25,10 +45,19 @@
             ]
           },
           {
+            "group": "Existing projects",
+            "pages": [
+              "adopt-existing",
+              "upgrade"
+            ]
+          },
+          {
             "group": "Developer workflow",
             "pages": [
               "development",
-              "contracts"
+              "contracts",
+              "code-generation",
+              "testing"
             ]
           },
           {
@@ -47,8 +76,7 @@
           {
             "group": "Commands",
             "pages": [
-              "cli/commands",
-              "cli/codegen"
+              "cli/commands"
             ]
           }
         ]
@@ -65,6 +93,11 @@
           "anchor": "Stacks Docs",
           "href": "https://docs.stacks.co",
           "icon": "book-open-cover"
+        },
+        {
+          "anchor": "Telegram",
+          "href": "https://telegram.me/+CBp6wSIiXNhmMjZk",
+          "icon": "paper-plane"
         }
       ]
     }
@@ -77,7 +110,7 @@
     "links": [
       {
         "label": "Support",
-        "href": "https://discord.gg/stacks"
+        "href": "https://telegram.me/+CBp6wSIiXNhmMjZk"
       }
     ]
   },
@@ -102,7 +135,7 @@
     "socials": {
       "x": "https://x.com/sfdstacks",
       "github": "https://github.com/scaffold-stack/scaffold-stack",
-      "discord": "https://discord.gg/stacks"
+      "telegram": "https://telegram.me/+CBp6wSIiXNhmMjZk"
     }
   }
 }

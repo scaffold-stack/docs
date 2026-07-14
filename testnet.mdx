@@ -1,21 +1,32 @@
 ---
-title: "Testnet Deployment"
+title: "Testnet deployment"
 description: "Deploy your dApp to Stacks testnet"
 ---
 
-# Testnet Deployment
+Deploy to Stacks testnet to test your dApp with real network conditions before mainnet.
 
-Deploy to Stacks testnet to test your dApp with real network conditions before mainnet launch.
+## Contents
 
-## Prerequisites
+- [Requirements](#requirements)
+- [Get testnet tokens](#get-testnet-tokens)
+- [Deploy to testnet](#deploy-to-testnet)
+- [Start frontend](#start-frontend)
+- [Test interactions](#test-interactions)
+- [Redeploy after changes](#redeploy-after-changes)
+- [Troubleshooting](#troubleshooting)
 
-- Testnet STX for gas fees
-- Testnet sBTC (if your contracts use it)
-- Mnemonic in `contracts/settings/Testnet.toml`
+## Requirements
+
+| Requirement | Notes |
+| --- | --- |
+| Clarinet | 3.21+ (`stacksdapp doctor`) |
+| Testnet STX | Gas fees |
+| Testnet sBTC | Only if your contracts use it |
+| Deployer mnemonic | In `contracts/settings/Testnet.toml` |
 
 ## Get testnet tokens
 
-1. Visit [Hiro Faucet](https://explorer.hiro.so/sandbox/faucet?chain=testnet)
+1. Visit the [Hiro testnet faucet](https://explorer.hiro.so/sandbox/faucet?chain=testnet)
 2. Request STX and sBTC
 3. Add your mnemonic to `Testnet.toml`:
 
@@ -31,22 +42,19 @@ derivation = "m/44'/5757'/0'/0/0"
 stacksdapp deploy --network testnet
 ```
 
-Preview the deployment first (no broadcast):
+Preview without broadcasting:
 
 ```bash
 stacksdapp deploy --network testnet --dry-run
 ```
 
-This will:
-- Generate deployment plan
-- Submit transactions to testnet
-- Update `deployments.json` with addresses
-
-Deploy a single contract by name:
+Deploy a single contract:
 
 ```bash
 stacksdapp deploy --network testnet --contract counter
 ```
+
+This generates a deployment plan, submits transactions, and updates `deployments.json`.
 
 ## Start frontend
 
@@ -58,19 +66,17 @@ Opens at `http://localhost:3000` connected to testnet.
 
 ## Test interactions
 
-- Connect Leather/Xverse wallet (set to Testnet)
-- Use debug UI to call contract functions
+- Connect Leather or Xverse (set to Testnet)
+- Use the debug UI to call contract functions
 - Verify wallet prompts and confirmations
 
-## Iterate and redeploy
+## Redeploy after changes
 
-Contracts are immutable, so changes create new versions:
+Contracts are immutable. Changes create new versions:
 
 ```bash
-# Edit contract
-# Deploy again
 stacksdapp deploy --network testnet
-# Creates counter-v2, counter-v3, etc.
+# counter-v2, counter-v3, ...
 ```
 
 The CLI handles versioning automatically.
@@ -79,14 +85,14 @@ The CLI handles versioning automatically.
 
 ### Transaction failures
 
-- Check gas fees (increase if needed)
+- Check gas fees
 - Verify mnemonic and derivation path
 - Ensure sufficient testnet balance
 
 ### Contract errors
 
-- Use `stacksdapp check` for syntax validation
-- Test locally first with devnet
+- Run `stacksdapp check` for syntax validation
+- Test locally with [devnet](/local-devnet) first
 - Check contract requirements
 
 ### Frontend issues

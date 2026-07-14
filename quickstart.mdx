@@ -1,19 +1,27 @@
 ---
 title: "Quickstart"
-description: "Deploy your first Stacks dApp in 5 steps"
+description: "Deploy your first Stacks dApp to testnet in 5 steps"
 ---
 
-# Quickstart — Testnet in 5 Steps
+Deploy your first Stacks dApp to testnet in minutes. No Docker required. Contracts run on Hiro testnet infrastructure.
 
-Get your first Stacks dApp deployed to testnet in minutes. No Docker needed — contracts run on Hiro's testnet infrastructure.
+## Contents
 
-## 1 — Install Scaffold Stacks
+- [Install the CLI](#install-the-cli)
+- [Scaffold a project](#scaffold-a-project)
+- [Get testnet STX](#get-testnet-stx)
+- [Deploy to testnet](#deploy-to-testnet)
+- [Start the frontend](#start-the-frontend)
+- [Connect your wallet](#connect-your-wallet)
 
-Install the CLI from Crates.io:
+## Install the CLI
+
+Requires Clarinet **3.21+**.
 
 ```bash
 cargo install stacksdapp
 stacksdapp --version
+stacksdapp doctor
 ```
 
 Or build from source:
@@ -24,25 +32,22 @@ cd scaffold-stack
 cargo install --path cli
 ```
 
-## 2 — Scaffold a new project
-
-Create your dApp project:
+## Scaffold a project
 
 ```bash
 stacksdapp new my-app
 cd my-app
 ```
 
-This generates a complete project with:
+This creates:
+
 - Clarinet configuration for contracts
 - Next.js frontend with wallet integration
-- Pre-configured settings for testnet/mainnet/devnet
+- Network settings for testnet, mainnet, and devnet
 
-## 3 — Get testnet STX
+## Get testnet STX
 
-Get testnet tokens from the Hiro faucet:
-
-1. Go to [https://explorer.hiro.so/sandbox/faucet?chain=testnet](https://explorer.hiro.so/sandbox/faucet?chain=testnet)
+1. Open the [Hiro testnet faucet](https://explorer.hiro.so/sandbox/faucet?chain=testnet)
 2. Add your deployer mnemonic to `contracts/settings/Testnet.toml`:
 
 ```toml
@@ -50,62 +55,58 @@ Get testnet tokens from the Hiro faucet:
 mnemonic = "your 24 words here"
 ```
 
-## 4 — Deploy to testnet
-
-Deploy your contracts:
+## Deploy to testnet
 
 ```bash
 stacksdapp deploy --network testnet
 ```
 
-Preview first without broadcasting:
+Preview without broadcasting:
 
 ```bash
 stacksdapp deploy --network testnet --dry-run
 ```
 
-This will:
-- Generate a deployment plan
-- Deploy to testnet
-- Update `frontend/src/generated/deployments.json` with contract addresses
-
-Deploy a single contract when iterating:
+Deploy a single contract:
 
 ```bash
 stacksdapp deploy --network testnet --contract counter
 ```
 
-## 5 — Start the frontend
+This generates a deployment plan, submits transactions, and writes addresses to `frontend/src/generated/deployments.json`.
 
-Launch the development server:
+## Start the frontend
 
 ```bash
 stacksdapp dev --network testnet
 ```
 
-Opens [http://localhost:3000](http://localhost:3000) with your wallet connected to testnet. The Debug Contracts panel shows every function in your contracts with typed inputs ready to call.
+Opens [http://localhost:3000](http://localhost:3000). The Debug Contracts panel lists every contract function with typed inputs.
 
 ## Connect your wallet
 
-Click **Connect Wallet** and connect Leather or Xverse set to Testnet. Every public function opens a wallet popup to sign and broadcast. Every read-only function calls the node directly — no wallet needed.
+Click **Connect Wallet** and connect Leather or Xverse set to Testnet.
+
+- Public functions open a wallet popup to sign and broadcast
+- Read-only functions call the node directly (no wallet needed)
 
 <Note>
-  **Congratulations!** You now have a live Stacks dApp on testnet. Explore the debug UI to interact with your contracts.
+  You now have a live Stacks dApp on testnet. Use the debug UI to interact with your contracts.
 </Note>
 
 ## Next steps
 
 <CardGroup cols={2}>
   <Card title="Edit contracts" icon="pen-to-square" href="/development">
-    Modify your Clarity contracts and see live updates.
+    Modify Clarity contracts and see live updates.
   </Card>
-  <Card title="Add new contracts" icon="plus" href="/contracts">
-    Create additional contracts with templates.
+  <Card title="Code generation" icon="code" href="/code-generation">
+    Bindings, hooks, watch mode, and ABI cache.
   </Card>
   <Card title="Run tests" icon="flask" href="/testing">
-    Test your contracts and frontend.
+    Test contracts and frontend.
   </Card>
-  <Card title="Deploy to mainnet" icon="cloud-upload" href="/mainnet">
-    Launch your dApp on mainnet.
+  <Card title="Local devnet" icon="server" href="/local-devnet">
+    Docker chain with `dev --auto-deploy`.
   </Card>
 </CardGroup>

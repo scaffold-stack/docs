@@ -1,15 +1,25 @@
 ---
-title: "Next Steps"
+title: "Developer workflow"
 description: "Edit contracts, add features, and iterate quickly"
 ---
 
-# Developer Workflow
+Edit Clarity contracts, regenerate bindings, run tests, and redeploy. Requires Clarinet **3.21+**. Run `stacksdapp doctor` if you hit toolchain errors.
 
-Scaffold Stacks provides a streamlined development experience with live reloading, auto-generated bindings, and comprehensive testing.
+## Contents
 
-## Edit contracts → see live updates
+- [Edit contracts](#edit-contracts)
+- [Add a contract](#add-a-contract)
+- [Run tests](#run-tests)
+- [Type-check contracts](#type-check-contracts)
+- [Redeploy after changes](#redeploy-after-changes)
+- [Project structure](#project-structure)
+- [Code generation](#code-generation)
+- [Frontend features](#frontend-features)
+- [Local development](#local-development)
 
-Open any `.clar` file in your `contracts/contracts/` directory and add a function:
+## Edit contracts
+
+Open any `.clar` file in `contracts/contracts/` and add a function:
 
 ```clarity
 (define-public (multiply (n uint))
@@ -18,62 +28,55 @@ Open any `.clar` file in your `contracts/contracts/` directory and add a functio
     (ok (var-get counter))))
 ```
 
-Redeploy to see changes (generate runs automatically):
+Update bindings:
+
+```bash
+stacksdapp generate
+```
+
+Or let `stacksdapp dev` / `stacksdapp generate --watch` handle it.
+
+Redeploy to apply on-chain changes:
 
 ```bash
 stacksdapp deploy --network testnet
 ```
 
-The `multiply` function appears in the debug UI with typed inputs after redeployment.
+The `multiply` function appears in the debug UI after regeneration and redeployment.
 
-## Add a new contract
-
-Create new contracts with built-in templates:
+## Add a contract
 
 ```bash
-# Blank contract
 stacksdapp add relayer
-
-# SIP-010 fungible token
 stacksdapp add token --template sip010
-
-# SIP-009 NFT
 stacksdapp add nft --template sip009
 ```
 
-Each command:
-- Creates the `.clar` file in `contracts/contracts/`
-- Updates `Clarinet.toml`
-- Regenerates all TypeScript bindings
-- Updates the debug UI
+Each command creates the `.clar` file, updates `Clarinet.toml`, regenerates bindings, and updates the debug UI.
+
+See [Working with contracts](/contracts) for a full sample contract and tests.
 
 ## Run tests
-
-Test both contracts and frontend:
 
 ```bash
 stacksdapp test
 ```
 
-This runs:
-- Contract tests in `contracts/tests/` (Clarinet SDK)
-- Frontend tests in `frontend/` (Vitest)
+See [Testing](/testing) for contract and frontend test patterns.
 
 ## Type-check contracts
-
-Validate Clarity syntax and types:
 
 ```bash
 stacksdapp check
 ```
 
-## Iterate and redeploy
+## Redeploy after changes
 
-Since Stacks contracts are immutable, redeploying creates versioned contracts:
+Stacks contracts are immutable. Redeploying creates versioned contracts:
 
 ```bash
 stacksdapp deploy --network testnet
-# Creates counter-v2, counter-v3, etc.
+# counter-v2, counter-v3, ...
 ```
 
 The CLI handles versioning automatically.
@@ -84,60 +87,57 @@ The CLI handles versioning automatically.
 my-app/
 ├── contracts/
 │   ├── Clarinet.toml
+│   ├── .cache/
 │   ├── settings/
-│   │   ├── Devnet.toml    # Pre-funded local accounts
-│   │   ├── Testnet.toml   # Add your mnemonic
-│   │   └── Mainnet.toml   # Add your mnemonic
+│   │   ├── Devnet.toml
+│   │   ├── Testnet.toml
+│   │   └── Mainnet.toml
 │   ├── contracts/
-│   │   └── counter.clar   # Your Clarity contracts
+│   │   └── counter.clar
 │   └── tests/
 │       └── counter.test.ts
 └── frontend/
-    ├── .env.local         # Auto-managed network config
+    ├── .env.local
     └── src/
         ├── app/
         ├── components/
         │   └── WalletConnect.tsx
-        └── generated/     # Auto-generated bindings
+        └── generated/
             ├── contracts.ts
             ├── hooks.ts
             ├── DebugContracts.tsx
             └── deployments.json
 ```
 
-## Auto-code generation
+## Code generation
 
-The `stacksdapp generate` command:
+See [Code generation](/code-generation) for the full pipeline, watch mode, ABI caching, and Hiro API keys.
 
-1. **Parse**: Extract ABIs from all contracts using `initSimnet()`
-2. **Normalize**: Convert Clarity types to TypeScript (uint128 → bigint, tuples → objects)
-3. **Render**: Generate `contracts.ts`, `hooks.ts`, and `DebugContracts.tsx`
-4. **Write**: Update files only if content changed (fast hot reload)
+Summary:
 
-The file watcher runs this automatically on every `.clar` save during `stacksdapp dev`.
+1. **Parse** ABIs via `initSimnet()` (cached under `contracts/.cache/`)
+2. **Normalize** Clarity types to TypeScript
+3. **Render** `contracts.ts`, `hooks.ts`, `DebugContracts.tsx`
+4. **Write** only when content changed
 
-## Frontend Features
-
-Scaffold Stacks automatically generates a complete frontend development environment:
+## Frontend features
 
 ### Debug UI
 
-A live debug interface is auto-generated from your contracts, allowing you to interact with all contract functions on-the-go. Every public function gets a typed input form, and read-only functions display results directly.
+Every public function gets a typed input form. Read-only functions display results directly.
 
 <Frame>
   <img src="/images/screen.png" alt="Debug UI showing contract interaction forms" />
 </Frame>
 
-### Reusable Hooks
-
-Type-safe React hooks are generated for each contract function, making it easy to integrate contract calls throughout your application:
+### Reusable hooks
 
 ```typescript
 import { useCounterIncrement } from '@/generated/hooks'
 
 function CounterComponent() {
   const { data, loading, call } = useCounterIncrement()
-  
+
   return (
     <button onClick={() => call([{ n: 1 }])}>
       {loading ? 'Incrementing...' : 'Increment'}
@@ -146,20 +146,18 @@ function CounterComponent() {
 }
 ```
 
-### Wallet Connect Component
+### Wallet Connect
 
-A reusable `WalletConnect.tsx` component handles wallet connections with support for Leather and Xverse wallets, including automatic network detection.
+`WalletConnect.tsx` handles Leather and Xverse, including network detection.
 
-### State Management
+### State management
 
-Jotai atoms are used for global state management, providing a simple and powerful way to manage application state across components.
+Jotai atoms sync wallet and network state across the template.
 
 ## Local development
 
-For offline development with full Bitcoin + Stacks simulation:
-
 ```bash
-stacksdapp dev  # Starts local devnet + frontend + watcher
+stacksdapp dev --auto-deploy
 ```
 
-Requires Docker. Pre-funded accounts available in `Devnet.toml`.
+See [Local devnet](/local-devnet) for manual deploy and devnet setup.

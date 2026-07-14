@@ -1,21 +1,32 @@
 ---
-title: "Mainnet Deployment"
+title: "Mainnet deployment"
 description: "Launch your dApp on Stacks mainnet"
 ---
-
-# Mainnet Deployment
 
 Deploy your production dApp to Stacks mainnet.
 
 <Warning>
-  **Mainnet deployments are permanent and costly.** Test thoroughly on testnet first.
+  Mainnet deployments are permanent and costly. Test thoroughly on testnet first.
 </Warning>
 
-## Prerequisites
+## Contents
 
-- Mainnet STX for deployment fees
-- Mainnet sBTC (if needed)
-- Mnemonic in `contracts/settings/Mainnet.toml`
+- [Requirements](#requirements)
+- [Security checklist](#security-checklist)
+- [Configure mainnet settings](#configure-mainnet-settings)
+- [Deploy to mainnet](#deploy-to-mainnet)
+- [Start production frontend](#start-production-frontend)
+- [Post-deployment](#post-deployment)
+- [Emergency procedures](#emergency-procedures)
+- [Costs](#costs)
+
+## Requirements
+
+| Requirement | Notes |
+| --- | --- |
+| Mainnet STX | Deployment and transaction fees |
+| Mainnet sBTC | Only if your contracts use it |
+| Deployer mnemonic | In `contracts/settings/Mainnet.toml` |
 
 ## Security checklist
 
@@ -41,7 +52,7 @@ derivation = "m/44'/5757'/0'/0/0"
 stacksdapp deploy --network mainnet
 ```
 
-Run a dry-run first to review estimated fees and contract list:
+Review fees and contract list first:
 
 ```bash
 stacksdapp deploy --network mainnet --dry-run
@@ -58,7 +69,6 @@ stacksdapp dev --network mainnet
 ## Post-deployment
 
 - Update frontend with mainnet addresses
-- Announce launch on social media
 - Monitor contract interactions
 - Plan for future upgrades
 
@@ -74,7 +84,7 @@ If issues arise:
 ## Costs
 
 - Deployment: ~0.1-1 STX per contract
-- Function calls: Variable based on complexity
-- Storage: Paid by contract owner initially
+- Function calls: variable based on complexity
+- Storage: paid by contract owner initially
 
 Monitor fees on [Stacks Explorer](https://explorer.stacks.co/).

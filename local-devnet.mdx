@@ -1,16 +1,34 @@
 ---
-title: "Local Devnet"
-description: "Run a full Stacks blockchain locally"
+title: "Local devnet"
+description: "Run a full Stacks blockchain locally with optional auto-deploy"
 ---
 
-# Local Devnet
+Run a complete Bitcoin and Stacks development environment locally with Docker.
 
-Run a complete Bitcoin + Stacks development environment locally with Docker.
+## Contents
 
-## Prerequisites
+- [Requirements](#requirements)
+- [Start devnet](#start-devnet)
+- [Auto-deploy](#auto-deploy)
+- [Pre-funded accounts](#pre-funded-accounts)
+- [Development workflow](#development-workflow)
+- [Stop devnet](#stop-devnet)
+- [When to use devnet](#when-to-use-devnet)
+- [Limitations](#limitations)
 
-- Docker Desktop installed and running
-- 8GB+ RAM recommended
+## Requirements
+
+| Requirement | Notes |
+| --- | --- |
+| Docker Desktop | Installed and running |
+| Clarinet | 3.21+ |
+| RAM | 8 GB+ recommended |
+
+Verify with:
+
+```bash
+stacksdapp doctor
+```
 
 ## Start devnet
 
@@ -19,10 +37,28 @@ stacksdapp dev
 ```
 
 This starts:
+
 - Bitcoin node
-- Stacks node  
+- Stacks node
 - Frontend at `http://localhost:3000`
 - File watcher for auto-regeneration
+- Chain health monitoring (prefixed `[dev]` logs)
+
+Deploy contracts in a second terminal once the node is ready (~30s):
+
+```bash
+stacksdapp deploy --network devnet
+```
+
+## Auto-deploy
+
+Deploy once the local chain is healthy. No second terminal required.
+
+```bash
+stacksdapp dev --auto-deploy
+```
+
+The supervisor waits for the devnet node, then runs deploy automatically.
 
 ## Pre-funded accounts
 
@@ -38,28 +74,26 @@ mnemonic = "sell invite acquire kitten bamboo drastic jelly vivid peace spawn tw
 balance = 100000000000000
 ```
 
-## Deploy to devnet
+<Warning>
+  These are public burner mnemonics for local use only. The CLI prints a safety warning. Never reuse them on testnet or mainnet, and never commit real deployer seeds.
+</Warning>
 
-In another terminal:
-
-```bash
-stacksdapp deploy --network devnet
-```
+No real STX or external wallet is required for basic debug UI flows on devnet.
 
 ## Development workflow
 
-- Edit `.clar` files → auto-regeneration
-- Deploy changes instantly
-- Test with pre-funded accounts
-- No real STX needed
+- Edit `.clar` files. Bindings regenerate automatically.
+- ABI cache in `contracts/.cache/` skips unchanged work.
+- Deploy with `--auto-deploy` or `stacksdapp deploy --network devnet`.
+- Test with pre-funded accounts.
 
-## Stopping devnet
+## Stop devnet
 
 ```bash
 stacksdapp clean
 ```
 
-Stops all services and removes containers.
+Stops services and removes generated and devnet state.
 
 ## When to use devnet
 

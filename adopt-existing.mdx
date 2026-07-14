@@ -1,0 +1,129 @@
+---
+title: "Adopt an existing project"
+description: "Bring an existing Clarinet repo onto Scaffold Stacks with stacksdapp init"
+---
+
+Run `stacksdapp init` from the repository root to add the Scaffold Stacks frontend, TypeScript bindings, and debug UI to an existing Clarinet project.
+
+## Contents
+
+- [Requirements](#requirements)
+- [What init does](#what-init-does)
+- [Standard Clarinet layout](#standard-clarinet-layout)
+- [Already scaffold layout](#already-scaffold-layout)
+- [Layout conflicts](#layout-conflicts)
+- [Init vs upgrade](#init-vs-upgrade)
+- [Next steps](#next-steps)
+
+## Requirements
+
+- Clarinet **3.21+**
+- Run from the repo root where Clarinet lives today
+
+Verify with:
+
+```bash
+stacksdapp doctor
+```
+
+## What init does
+
+1. Normalizes layout to `contracts/Clarinet.toml` and `frontend/` when needed
+2. Adds missing frontend template files
+3. Runs `npm install` in `frontend/` and `contracts/`
+4. Runs `stacksdapp generate`
+
+<Note>
+  If `frontend/` already exists but `frontend/scripts/export-abi.mjs` is missing, `init` exits with an error. Add that script, or move `frontend/` temporarily, then run `init` again.
+</Note>
+
+## Standard Clarinet layout
+
+**Before:**
+
+```text
+my-dapp/
+├── Clarinet.toml
+├── contracts/
+│   └── token.clar          # path in TOML: contracts/token.clar
+├── settings/
+│   └── Devnet.toml
+├── tests/
+│   └── token.test.ts
+├── package.json
+├── tsconfig.json
+└── vitest.config.ts
+```
+
+```bash
+cd my-dapp
+stacksdapp init
+```
+
+**After (typical):**
+
+```text
+my-dapp/
+├── contracts/
+│   ├── Clarinet.toml       # moved from repo root
+│   ├── contracts/
+│   │   └── token.clar      # moved from contracts/token.clar
+│   ├── settings/
+│   ├── tests/
+│   └── package.json
+├── frontend/
+│   └── scripts/
+│       └── export-abi.mjs
+└── (root Clarinet.toml removed after move)
+```
+
+Entries like `path = "contracts/token.clar"` in `Clarinet.toml` still resolve. The file ends up at `contracts/contracts/token.clar`, with `Clarinet.toml` under `contracts/`.
+
+## Already scaffold layout
+
+```text
+my-dapp/
+├── contracts/
+│   └── Clarinet.toml
+├── frontend/
+│   ├── package.json
+│   └── scripts/export-abi.mjs
+└── ...
+```
+
+```bash
+cd my-dapp
+stacksdapp init
+```
+
+Normalization is skipped. Missing files are filled in, then `npm install` and `stacksdapp generate` run.
+
+## Layout conflicts
+
+`init` fails if both of these exist:
+
+- `./settings`
+- `./contracts/settings`
+
+Merge or remove one set, then rerun.
+
+## Init vs upgrade
+
+| Command | Use case |
+| --- | --- |
+| `stacksdapp init` | First time bringing an existing Clarinet project onto Scaffold Stacks |
+| [`stacksdapp upgrade`](/upgrade) | Already scaffolded; refresh deps and regenerate bindings |
+
+## Next steps
+
+```bash
+stacksdapp check
+stacksdapp test
+stacksdapp deploy --network testnet
+```
+
+For local development with auto-deploy:
+
+```bash
+stacksdapp dev --auto-deploy
+```

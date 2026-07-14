@@ -1,277 +1,118 @@
 ---
-title: "CLI Commands"
-description: "Complete reference for stacksdapp commands"
+title: "CLI commands"
+description: "Compact reference for stacksdapp flags and commands"
 ---
 
-# CLI Command Reference
+Syntax and flags only. For walkthroughs and layout examples, see the Guides tab.
 
-## Project management
+## Contents
 
-### `stacksdapp new <name>`
+- [Command overview](#command-overview)
+- [new](#new)
+- [add](#add)
+- [dev](#dev)
+- [generate](#generate)
+- [deploy](#deploy)
+- [test, check, clean](#test-check-clean)
+- [Configuration files](#configuration-files)
 
-Scaffold a new Scaffold Stacks project.
+## Command overview
+
+```bash
+stacksdapp --version
+stacksdapp doctor              # prerequisite checks (Clarinet 3.21+)
+```
+
+| Command | Description |
+| --- | --- |
+| `stacksdapp new <name>` | Scaffold a new monorepo |
+| `stacksdapp init` | Adopt an existing Clarinet project ([guide](/adopt-existing)) |
+| `stacksdapp upgrade` | Refresh deps and regenerate bindings ([guide](/upgrade)) |
+| `stacksdapp doctor` | Check Rust, Node, Clarinet 3.21+, Docker, git |
+| `stacksdapp add <name>` | Add a blank Clarity contract |
+| `stacksdapp add <name> --template sip010` | SIP-010 fungible token |
+| `stacksdapp add <name> --template sip009` | SIP-009 NFT |
+| `stacksdapp generate` | Regenerate TypeScript bindings ([guide](/code-generation)) |
+| `stacksdapp generate --watch` | Regenerate on `.clar` changes |
+| `stacksdapp test` | Contract and frontend tests ([guide](/testing)) |
+| `stacksdapp check` | Type-check Clarity contracts |
+| `stacksdapp clean` | Remove generated files and devnet state |
+| `stacksdapp dev` | Local devnet + frontend + watcher ([guide](/local-devnet)) |
+| `stacksdapp dev --auto-deploy` | Devnet and deploy once the chain is ready |
+| `stacksdapp dev --network testnet` | Frontend against testnet |
+| `stacksdapp dev --network mainnet` | Frontend against mainnet |
+| `stacksdapp deploy --network <net>` | Deploy contracts (`devnet`, `testnet`, `mainnet`) |
+| `stacksdapp deploy --network testnet --contract <name>` | Deploy one contract |
+| `stacksdapp deploy --network testnet --dry-run` | Plan and fee estimate, no broadcast |
+
+## new
 
 ```bash
 stacksdapp new my-dapp
 ```
 
-Creates a complete project structure with contracts and frontend.
-
-### `stacksdapp init`
-
-Adopt an existing Clarinet repository so it matches scaffold-stacks: adds a `frontend/` and Node tooling where needed, keeps your contracts, and normalizes the repo layout when Clarinet currently lives at the root.
-
-**When:** Run from the repository root (where Clarinet lives today).
-
-#### Example A — Standard Clarinet layout (before)
-
-```text
-my-dapp/
-├── Clarinet.toml
-├── contracts/
-│   └── token.clar          # path in TOML: contracts/token.clar
-├── settings/
-│   └── Devnet.toml
-├── tests/
-│   └── token.test.ts
-├── package.json
-├── tsconfig.json
-└── vitest.config.ts
-```
-
-```bash
-cd my-dapp
-stacksdapp init
-```
-
-**After normalization (typical result):**
-
-```text
-my-dapp/
-├── contracts/
-│   ├── Clarinet.toml       # moved from repo root
-│   ├── contracts/
-│   │   └── token.clar      # moved from contracts/token.clar
-│   ├── settings/           # moved from ./settings if no conflict
-│   ├── tests/              # moved from ./tests if no conflict
-│   ├── package.json        # etc., if missing under contracts/
-│   └── ...
-├── frontend/               # added from template if it did not exist
-│   ├── scripts/
-│   │   └── export-abi.mjs
-│   └── ...
-└── (root Clarinet.toml removed after move)
-```
-
-**Path resolution:** Entries like `path = "contracts/token.clar"` in `Clarinet.toml` still resolve. The file ends up at `contracts/contracts/token.clar` relative to the repo root, with `Clarinet.toml` under `contracts/`.
-
-**Existing `frontend/`:** If `frontend/` already exists but `frontend/scripts/export-abi.mjs` is missing, `init` exits with an error and does not overwrite your frontend. Add that script, or move or rename `frontend/` temporarily, then run `init` again.
-
-#### Example B — Already scaffold layout (no file moves)
-
-```text
-my-dapp/
-├── contracts/
-│   └── Clarinet.toml
-├── frontend/
-│   ├── package.json
-│   └── scripts/export-abi.mjs
-└── ...
-```
-
-```bash
-cd my-dapp
-stacksdapp init
-```
-
-Normalization is skipped; only missing files are filled in, then `npm install` and `stacksdapp generate` run.
-
-#### Example C — Conflict (error)
-
-If both of these exist, `init` fails with a message to merge or remove one set, then rerun:
-
-- `./settings`
-- `./contracts/settings`
-
-### `stacksdapp add <name>`
-
-Add a new Clarity contract.
+## add
 
 ```bash
 stacksdapp add my-contract
-```
-
-Creates `contracts/contracts/my-contract.clar` and updates configuration.
-
-#### Templates
-
-```bash
-# SIP-010 fungible token
 stacksdapp add token --template sip010
-
-# SIP-009 NFT
 stacksdapp add nft --template sip009
 ```
 
-## Development
+Creates `contracts/contracts/<name>.clar`, updates `Clarinet.toml`, and regenerates bindings.
 
-### `stacksdapp dev`
-
-Start development server.
+## dev
 
 ```bash
-# Testnet (default)
+stacksdapp dev                         # local Docker devnet
+stacksdapp dev --auto-deploy           # deploy when chain is healthy
 stacksdapp dev --network testnet
-
-# Mainnet
 stacksdapp dev --network mainnet
-
-# Local devnet (requires Docker)
-stacksdapp dev
 ```
 
-### `stacksdapp generate`
+Default with no `--network` starts local devnet (Docker required).
 
-Regenerate TypeScript bindings from contracts.
+## generate
 
 ```bash
 stacksdapp generate
+stacksdapp generate --watch
 ```
 
-Runs automatically during `dev` when contracts change.
-
-## Testing & validation
-
-### `stacksdapp test`
-
-Run all tests.
+## deploy
 
 ```bash
-stacksdapp test
-```
-
-Runs contract tests (Clarinet SDK) and frontend tests (Vitest).
-
-### `stacksdapp check`
-
-Type-check Clarity contracts.
-
-```bash
-stacksdapp check
-```
-
-Validates syntax and types without deployment.
-
-## Deployment
-
-### `stacksdapp deploy`
-
-Deploy contracts to network.
-
-```bash
-# Testnet
 stacksdapp deploy --network testnet
-
-# Mainnet
 stacksdapp deploy --network mainnet
-
-# Devnet
 stacksdapp deploy --network devnet
-
-# Deploy a single contract by name
 stacksdapp deploy --network testnet --contract counter
-
-# Preview deployment plan without broadcasting
 stacksdapp deploy --network testnet --dry-run
 ```
 
-#### Deploy options
+| Flag | Description |
+| --- | --- |
+| `--network <network>` | `testnet`, `mainnet`, or `devnet` |
+| `--contract <name>` | Deploy only one contract |
+| `--dry-run` | Print plan and estimated fee without broadcasting |
 
-- `--network <network>`: Target network (`testnet`, `mainnet`, or `devnet`)
-- `--contract <name>`: Deploy only one contract from your project
-- `--dry-run`: Generate and print deployment plan, estimated fee, and contract list without broadcasting transactions
+Guides: [testnet](/testnet) · [mainnet](/mainnet) · [local devnet](/local-devnet)
 
-### Networks
-
-- **testnet**: Hiro testnet infrastructure
-- **mainnet**: Stacks mainnet
-- **devnet**: Local Docker environment
-
-## Maintenance
-
-### `stacksdapp upgrade`
-
-Refresh npm dependencies in `frontend/` and `contracts/`, then run `stacksdapp generate` again. Does not rewrite your application logic.
-
-**Prerequisites:** Full scaffold layout, including:
-
-- `contracts/Clarinet.toml`
-- `frontend/package.json`
+## test, check, clean
 
 ```bash
-cd my-dapp
-stacksdapp upgrade
-```
-
-**When to use it:** After pulling a newer `stacksdapp` or template, or when generated bindings feel stale and you want a deterministic refresh without rescaffolding.
-
-**What to expect:** A spinner and install progress for `frontend` and `contracts`, then codegen output (same kind of feedback as `init` for npm).
-
-### `stacksdapp clean`
-
-Remove generated files and devnet state.
-
-```bash
+stacksdapp test
+stacksdapp check
 stacksdapp clean
 ```
 
-### `stacksdapp --version`
-
-Show CLI version.
-
-```bash
-stacksdapp --version
-```
-
-## Init vs upgrade
-
-| Command | Use case |
-| --- | --- |
-| `stacksdapp init` | First time bringing an existing Clarinet project onto scaffold-stacks. |
-| `stacksdapp upgrade` | Already a scaffold project; refresh dependencies and regenerate TypeScript bindings. |
-
 ## Configuration files
 
-### `Clarinet.toml`
-
-Contract configuration managed by CLI. In the full scaffold layout, this file lives at `contracts/Clarinet.toml`.
-
-### `contracts/settings/*.toml`
-
-Network-specific settings:
-
-- `Devnet.toml`: Local development
-- `Testnet.toml`: Testnet deployment  
-- `Mainnet.toml`: Mainnet deployment
-
-### `frontend/.env.local`
-
-Auto-managed network configuration.
-
-## Auto-generated files
-
-### `contracts.ts`
-
-Type-safe contract call wrappers.
-
-### `hooks.ts`
-
-React hooks for contract interactions.
-
-### `DebugContracts.tsx`
-
-Live debug UI component.
-
-### `deployments.json`
-
-Deployed contract addresses.
+| Path | Role |
+| --- | --- |
+| `contracts/Clarinet.toml` | Contract registry (full scaffold layout) |
+| `contracts/settings/Devnet.toml` | Local accounts (mnemonic warning shown in CLI) |
+| `contracts/settings/Testnet.toml` | Deployer mnemonic for testnet |
+| `contracts/settings/Mainnet.toml` | Deployer mnemonic for mainnet |
+| `frontend/.env.local` | Auto-managed network config; optional `NEXT_PUBLIC_HIRO_API_KEY` |
+| `contracts/.cache/` | Cached ABIs (skip redundant `initSimnet`) |
+| `frontend/src/generated/*` | Generated bindings. Do not edit by hand. |
