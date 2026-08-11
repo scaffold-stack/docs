@@ -1,6 +1,7 @@
 ---
 title: "Mainnet deployment"
-description: "Launch your dApp on Stacks mainnet"
+description: "Launch your Stacks dApp on mainnet with stacksdapp deploy — production checklists, fee estimation, and safe Clarity smart contract deployment."
+keywords: ["Stacks mainnet deploy", "stacksdapp deploy mainnet", "Stacks production", "Clarity mainnet", "Scaffold Stacks"]
 ---
 
 Deploy your production dApp to Stacks mainnet.
@@ -14,6 +15,7 @@ Deploy your production dApp to Stacks mainnet.
 - [Requirements](#requirements)
 - [Security checklist](#security-checklist)
 - [Configure mainnet settings](#configure-mainnet-settings)
+- [SIP token mainnet requirements](#sip-token-mainnet-requirements)
 - [Deploy to mainnet](#deploy-to-mainnet)
 - [Start production frontend](#start-production-frontend)
 - [Post-deployment](#post-deployment)
@@ -35,6 +37,7 @@ Deploy your production dApp to Stacks mainnet.
 - [ ] Emergency functions implemented
 - [ ] Upgrade mechanisms planned
 - [ ] Sufficient STX for fees
+- [ ] Real mnemonics never committed to git (pre-commit hook enabled)
 
 ## Configure mainnet settings
 
@@ -46,10 +49,24 @@ mnemonic = "your mainnet seed phrase"
 derivation = "m/44'/5757'/0'/0/0"
 ```
 
+Store production keys in a secrets manager or gitignored file when possible. The bundled pre-commit hook blocks likely seed phrases in tracked settings files.
+
+## SIP token mainnet requirements
+
+For SIP-010 and SIP-009 tokens created with `stacksdapp add --template sip010|sip009`, uncomment the `(impl-trait …)` line in the contract before mainnet deploy:
+
+| Standard | Mainnet `impl-trait` |
+| --- | --- |
+| SIP-010 | `'SP3FBR2AGK5H9QBDH3EEN6DF8EK8JY7RX8QJ5SVTE.sip-010-trait-ft-standard.sip-010-trait` |
+| SIP-009 | `'SP2PABAF9FTAJYNFZH93XENAJ8FVY99RRM50D2JG9.nft-trait` |
+
+Templates ship without `impl-trait` so testnet deploy succeeds. Mainnet requires it for wallet listing.
+
 ## Deploy to mainnet
 
 ```bash
-stacksdapp deploy --network mainnet
+stacksdapp check && stacksdapp generate && stacksdapp test
+stacksdapp deploy --network mainnet --yes
 ```
 
 Review fees and contract list first:
