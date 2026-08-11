@@ -1,9 +1,10 @@
 ---
 title: "Testing"
-description: "Run Clarity contract tests and frontend Vitest suites with stacksdapp test"
+description: "Test Clarity smart contracts and Next.js frontends with stacksdapp test — Vitest simnet tests in contracts/tests/ without Docker."
+keywords: ["Clarity testing", "Stacks contract tests", "stacksdapp test", "Clarinet simnet", "Scaffold Stacks testing"]
 ---
 
-`stacksdapp test` runs contract tests (Clarinet SDK) and frontend tests (Vitest). No Docker or local devnet is required for contract tests.
+`stacksdapp test` runs contract tests (Clarinet SDK with `vitest-environment-clarinet`) and frontend tests (Vitest). No Docker or local devnet is required for contract tests.
 
 ## Contents
 
@@ -22,39 +23,36 @@ stacksdapp test
 
 This runs:
 
-- **Contracts**: Vitest + Clarinet SDK (`initSimnet()`) in `contracts/tests/`
+- **Contracts**: Vitest + Clarinet SDK in `contracts/tests/` (global `simnet` from `vitest-environment-clarinet`)
 - **Frontend**: Vitest in `frontend/` (`vitest run --passWithNoTests`)
 
 ## Contract tests
 
-Tests live under `contracts/tests/`.
+Tests live under `contracts/tests/`. The scaffold template uses the `clarinet` Vitest environment with a global `simnet` instance:
 
 ```typescript
-import { Cl, ClarityType } from "@stacks/transactions";
-import { beforeEach, describe, expect, it } from "vitest";
-import { initSimnet } from "@stacks/clarinet-sdk";
+import { describe, expect, it } from "vitest";
+import { Cl } from "@stacks/transactions";
 
-let simnet: Awaited<ReturnType<typeof initSimnet>>;
-let accounts: ReturnType<Awaited<ReturnType<typeof initSimnet>>["getAccounts"]>;
-let deployer: string;
-let address1: string;
-
-beforeEach(async () => {
-  simnet = await initSimnet();
-  accounts = simnet.getAccounts();
-  deployer = accounts.get("deployer")!;
-  address1 = accounts.get("wallet_1")!;
-});
+const accounts = simnet.getAccounts();
+const deployer = accounts.get("deployer")!;
 
 describe("counter", () => {
   it("increments", () => {
-    const result = simnet.callPublicFn("counter", "increment", [], address1);
-    expect(result.result.type).toBe(ClarityType.ResponseOk);
+    const { result } = simnet.callPublicFn("counter", "increment", [], deployer);
+    expect(result).toBeOk(Cl.uint(1));
+  });
+  it("decrement", () => {
+    simnet.callPublicFn("counter", "increment", [], deployer);
+    const { result } = simnet.callPublicFn("counter", "decrement", [], deployer);
+    expect(result).toBeOk(Cl.uint(0));
   });
 });
 ```
 
-Requires Clarinet **3.21+** and matching `@stacks/clarinet-sdk` in the contracts package.
+SIP template tests are generated automatically when you run `stacksdapp add --template sip010|sip009`.
+
+Requires Clarinet **3.23+** and matching `@stacks/clarinet-sdk` in the contracts package.
 
 ## ABI caching
 
@@ -77,3 +75,4 @@ Frontend Vitest suites live under `frontend/`. They run as part of `stacksdapp t
 - Use simnet tests for contract logic
 - Use [local devnet](/local-devnet) or [testnet](/testnet) for full wallet flows
 - After editing contracts, run `stacksdapp generate` so bindings stay aligned with tests that import generated code
+- Prefer testnet over devnet for reliable deploy verification
