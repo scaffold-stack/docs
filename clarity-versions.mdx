@@ -1,0 +1,92 @@
+---
+title: "Clarity versions"
+description: "Clarity 4, 5, and 6 version support in Scaffold Stacks — epoch mapping, Clarinet 3.23+ requirements, and migration guidance for Stacks smart contracts."
+keywords: ["Clarity 6", "Clarity versions", "Stacks epoch", "Clarinet 3.23", "Scaffold Stacks"]
+---
+
+Scaffold Stacks supports Clarity 4, 5, and 6. **New projects default to Clarity 6** with epoch `4.0`.
+
+## Contents
+
+- [Version and epoch mapping](#version-and-epoch-mapping)
+- [Adding contracts](#adding-contracts)
+- [Downgrading an existing project](#downgrading-an-existing-project)
+- [Deploy implications](#deploy-implications)
+- [When to use which version](#when-to-use-which-version)
+
+## Version and epoch mapping
+
+| clarity_version | epoch | Use case |
+| --- | --- | --- |
+| **6** (default) | `"4.0"` | New contracts and projects |
+| **5** | `"3.4"` | Legacy contracts, backward compatibility |
+| **4** | `"3.0"` | Older contracts |
+
+`clarity_version` and `epoch` must match. Clarinet 3.23+ treats ambiguous configs as epoch 4.0. A C5 contract with `epoch = "4.0"` will misbehave on devnet deploy.
+
+Each contract entry in `contracts/Clarinet.toml` looks like:
+
+```toml
+[contracts.counter]
+path = "contracts/counter.clar"
+clarity_version = 6
+epoch = "4.0"
+```
+
+## Adding contracts
+
+```bash
+# Default C6 + epoch 4.0
+stacksdapp add my-contract
+
+# Legacy C5 + epoch 3.4 (automatic)
+stacksdapp add legacy --clarity-version 5
+
+# C4 + epoch 3.0
+stacksdapp add old --clarity-version 4
+```
+
+The `add` command writes the correct epoch into `Clarinet.toml` for the new contract entry. Contract templates (`sip010`, `sip009`) inherit `--clarity-version` (default 6).
+
+## Downgrading an existing project
+
+If changing C6 to C5 manually:
+
+1. Set `clarity_version = 5` **and** `epoch = "3.4"` on each affected `[contracts.*]` entry
+2. Regenerate deployment plans:
+   ```bash
+   cd contracts
+   clarinet deployments generate --devnet
+   clarinet deployments generate --testnet
+   ```
+3. Run `stacksdapp check && stacksdapp test`
+4. Redeploy
+
+Never leave `clarity_version = 5` with `epoch = "4.0"`.
+
+## Deploy implications
+
+### Testnet and mainnet
+
+- Direct broadcast via `@stacks/transactions`
+- Works for C4, C5, and C6 when the node supports the epoch
+- No Docker required
+
+### Devnet
+
+- **Clarity 6** requires **Clarinet 3.23+** and the epoch 4.0 devnet snapshot
+- C5/C6 deploys wait for epoch burn height before broadcasting
+- Devnet `settings/Devnet.toml` includes PoX stacking orders required for the epoch 4.0 snapshot. Do not remove them
+
+Run `stacksdapp doctor` to verify your Clarinet version.
+
+## When to use which version
+
+| Scenario | Recommendation |
+| --- | --- |
+| New dApp | C6 (default) |
+| Porting existing C5 contract | `--clarity-version 5` or manual 3.4 epoch |
+| Audited C5 codebase | Keep C5. Do not upgrade epoch without audit |
+| Mainnet production | Match deployed epoch. Test on testnet first |
+
+After any version change, run `stacksdapp generate` so TypeScript bindings stay aligned.
