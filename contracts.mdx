@@ -1,14 +1,16 @@
 ---
 title: "Contracts"
-description: "Create and manage Clarity smart contracts"
+description: "Create, test, and manage Clarity smart contracts in Scaffold Stacks with stacksdapp add, check, and deploy — includes SIP-010 and SIP-009 templates."
+keywords: ["Clarity smart contracts", "Stacks contracts", "stacksdapp add", "Scaffold Stacks contracts", "Clarinet"]
 ---
 
-Add, test, and deploy Clarity contracts with auto-generated TypeScript bindings.
+Add, test, and deploy Clarity contracts with auto-generated TypeScript bindings. New projects default to **Clarity 6** (epoch 4.0).
 
 ## Contents
 
 - [Creating contracts](#creating-contracts)
 - [Sample contract](#sample-contract)
+- [SIP token templates](#sip-token-templates)
 - [Contract requirements](#contract-requirements)
 - [Key concepts](#key-concepts)
 - [Testing contracts](#testing-contracts)
@@ -18,7 +20,7 @@ Add, test, and deploy Clarity contracts with auto-generated TypeScript bindings.
 Use the CLI to add new contracts to your project:
 
 ```bash
-# Create a blank contract
+# Create a blank contract (Clarity 6 by default)
 stacksdapp add message
 
 # Create a SIP-010 fungible token
@@ -26,100 +28,62 @@ stacksdapp add my-token --template sip010
 
 # Create a SIP-009 NFT
 stacksdapp add my-nft --template sip009
+
+# Legacy Clarity 5 contract
+stacksdapp add legacy-token --template sip010 --clarity-version 5
 ```
+
+Each command creates the `.clar` file, a Vitest test, updates `Clarinet.toml` with the correct epoch, adds trait requirements for SIP templates, and regenerates TypeScript bindings.
 
 ## Sample contract
 
-Here's a complete Clarity contract that demonstrates key concepts including sBTC payments, data storage, and read-only functions. This is based on the official Stacks Developer Quickstart.
+The default scaffolded counter contract demonstrates data storage and public/read-only functions:
 
 ```clarity
-;; Simple Message Board Contract
-;; This contract allows users to read and post messages for a fee in sBTC.
+;; counter.clar scaffolded by scaffold-stacks
 
-;; Define contract owner
-(define-constant CONTRACT_OWNER tx-sender)
+(define-data-var counter uint u0)
 
-;; Define error codes
-(define-constant ERR_NOT_ENOUGH_SBTC (err u1004))
-(define-constant ERR_NOT_CONTRACT_OWNER (err u1005))
-(define-constant ERR_BLOCK_NOT_FOUND (err u1003))
+(define-read-only (get-count)
+  (ok (var-get counter)))
 
-;; Define a map to store messages
-;; Each message has an ID, content, author, and Bitcoin block height timestamp
-(define-map messages
-  uint
-  {
-    message: (string-utf8 280),
-    author: principal,
-    time: uint,
-  }
-)
-
-;; Counter for total messages
-(define-data-var message-count uint u0)
-
-;; Public function to add a new message for 1 satoshi of sBTC
-(define-public (add-message (content (string-utf8 280)))
-  (let ((id (+ (var-get message-count) u1)))
-    (try! (restrict-assets? contract-caller 
-      ((with-ft 'SM3VDXK3WZZSA84XXFKAFAF15NNZX32CTSG82JFQ4.sbtc-token "sbtc-token" u1))
-      (unwrap!
-        ;; Charge 1 satoshi of sBTC from the caller
-        (contract-call? 'SM3VDXK3WZZSA84XXFKAFAF15NNZX32CTSG82JFQ4.sbtc-token
-          transfer u1 contract-caller current-contract none
-        )
-        ERR_NOT_ENOUGH_SBTC
-      )
-    ))
-    ;; Store the message with current Bitcoin block height
-    (map-set messages id {
-      message: content,
-      author: contract-caller,
-      time: burn-block-height,
-    })
-    ;; Update message count
-    (var-set message-count id)
-    ;; Emit event for the new message
-    (print {
-      event: "[Stacks Dev Quickstart] New Message",
-      message: content,
-      id: id,
-      author: contract-caller,
-      time: burn-block-height,
-    })
-    ;; Return the message ID
-    (ok id)
-  )
-)
-
-;; Withdraw function for contract owner to withdraw accumulated sBTC
-(define-public (withdraw-funds)
+(define-public (increment)
   (begin
-    (asserts! (is-eq tx-sender CONTRACT_OWNER) (err u1005))
-    (let ((balance (unwrap-panic (contract-call? 'SM3VDXK3WZZSA84XXFKAFAF15NNZX32CTSG82JFQ4.sbtc-token
-        get-balance current-contract
-      ))))
-      (if (> balance u0)
-        (contract-call? 'SM3VDXK3WZZSA84XXFKAFAF15NNZX32CTSG82JFQ4.sbtc-token
-          transfer balance current-contract CONTRACT_OWNER none
-        )
-        (ok false)
-      )
-    )
-  )
-)
+    (var-set counter (+ (var-get counter) u1))
+    (ok (var-get counter))))
 
-;; Read-only function to get a message by ID
-(define-read-only (get-message (id uint))
-  (map-get? messages id)
-)
+(define-public (decrement)
+  (begin
+    (asserts! (> (var-get counter) u0) (err u1))
+    (var-set counter (- (var-get counter) u1))
+    (ok (var-get counter))))
 
-;; Read-only function to get message author
-(define-read-only (get-message-author (id uint))
-  (get author (map-get? messages id))
-)
-
+(define-public (reset)
+  (begin
+    (var-set counter u0)
+    (ok u0)))
 ```
+
+## SIP token templates
+
+SIP-010 and SIP-009 templates implement all required trait functions. They ship **without** `(impl-trait …)` so testnet deploy succeeds.
+
+| Network | `impl-trait` | Notes |
+| --- | --- | --- |
+| Testnet | Omit | No standard trait contract deployed on testnet |
+| Mainnet | Required for wallet listing | Uncomment the mainnet line in the template before deploy |
+| Simnet / tests | Omit | Clarinet requirement pulls mainnet trait for type-checking |
+
+<Warning>
+  Never use bare trait names like `(impl-trait 'sip-010-trait)`. Use the full mainnet path or omit for testnet. See the comment in each SIP template for the exact mainnet line.
+</Warning>
+
+Mainnet trait addresses:
+
+| Standard | `impl-trait` (mainnet only) |
+| --- | --- |
+| SIP-010 | `'SP3FBR2AGK5H9QBDH3EEN6DF8EK8JY7RX8QJ5SVTE.sip-010-trait-ft-standard.sip-010-trait` |
+| SIP-009 | `'SP2PABAF9FTAJYNFZH93XENAJ8FVY99RRM50D2JG9.nft-trait` |
 
 ## Contract requirements
 
@@ -131,21 +95,20 @@ cd contracts
 clarinet requirements add SM3VDXK3WZZSA84XXFKAFAF15NNZX32CTSG82JFQ4.sbtc-deposit
 ```
 
-This wires up the official contracts for local testing and deployment.
+SIP templates automatically add trait requirements to `Clarinet.toml` for simnet type-checking.
 
 ## Key concepts
 
 ### sBTC Integration
 
-This contract uses sBTC (Stacks' 1:1 backed Bitcoin) for payments:
+Contracts using sBTC require the sBTC contract as a dependency:
 
-- Requires the sBTC contract as a dependency
 - Uses `restrict-assets?` for post-conditions
 - Transfers sBTC using the official token contract
 
 ### Data Storage
 
-- **Maps**: Store structured data (messages with metadata)
+- **Maps**: Store structured data with metadata
 - **Data variables**: Track counters and global state
 - **Constants**: Define immutable values
 
@@ -158,36 +121,30 @@ This contract uses sBTC (Stacks' 1:1 backed Bitcoin) for payments:
 ### Read-Only Functions
 
 - Query contract state without transactions
-- Use `at-block` for historical data
 - Return `Optional` types for safe lookups
+
+See [SIP standards](/sip-standards) for trait tables, hook examples, and `impl-trait` rules.
 
 ## Testing contracts
 
-Write tests in `contracts/tests/` using the Clarinet SDK (3.21+). Full patterns, ABI caching, and frontend Vitest coverage live in [Testing](/testing).
+Write tests in `contracts/tests/` using the Clarinet SDK with the `clarinet` Vitest environment:
 
 ```typescript
-import { Cl, ClarityType } from "@stacks/transactions";
-import { beforeEach, describe, expect, it } from "vitest";
-import { initSimnet } from "@stacks/clarinet-sdk";
+import { describe, expect, it } from "vitest";
+import { Cl } from "@stacks/transactions";
 
-let simnet: Awaited<ReturnType<typeof initSimnet>>;
-let address1: string;
+const accounts = simnet.getAccounts();
+const deployer = accounts.get("deployer")!;
 
-beforeEach(async () => {
-  simnet = await initSimnet();
-  address1 = simnet.getAccounts().get("wallet_1")!;
-});
-
-describe("message", () => {
-  it("allows user to add a new message", () => {
-    const content = "Hello Stacks Devs!";
-    const confirmation = simnet.callPublicFn(
-      "message",
-      "add-message",
-      [Cl.stringUtf8(content)],
-      address1
-    );
-    expect(confirmation.result.type).toBe(ClarityType.ResponseOk);
+describe("counter", () => {
+  it("increments", () => {
+    const { result } = simnet.callPublicFn("counter", "increment", [], deployer);
+    expect(result).toBeOk(Cl.uint(1));
+  });
+  it("get-count returns current value", () => {
+    simnet.callPublicFn("counter", "increment", [], deployer);
+    const { result } = simnet.callReadOnlyFn("counter", "get-count", [], deployer);
+    expect(result).toBeOk(Cl.uint(1));
   });
 });
 ```
@@ -195,3 +152,5 @@ describe("message", () => {
 ```bash
 stacksdapp test
 ```
+
+Full patterns, ABI caching, and frontend Vitest coverage live in [Testing](/testing).
