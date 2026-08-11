@@ -1,9 +1,10 @@
 ---
 title: "Developer workflow"
-description: "Edit contracts, add features, and iterate quickly"
+description: "Day-to-day Stacks dApp development with stacksdapp — edit Clarity contracts, run checks and tests, generate TypeScript hooks, and iterate with the debug UI."
+keywords: ["Stacks developer workflow", "stacksdapp dev", "Clarity development", "Scaffold Stacks"]
 ---
 
-Edit Clarity contracts, regenerate bindings, run tests, and redeploy. Requires Clarinet **3.21+**. Run `stacksdapp doctor` if you hit toolchain errors.
+Edit Clarity contracts, regenerate bindings, run tests, and redeploy. Requires Clarinet **3.23+** for Clarity 6 devnet. Run `stacksdapp doctor` if you hit toolchain errors.
 
 ## Contents
 
@@ -39,7 +40,7 @@ Or let `stacksdapp dev` / `stacksdapp generate --watch` handle it.
 Redeploy to apply on-chain changes:
 
 ```bash
-stacksdapp deploy --network testnet
+stacksdapp deploy --network testnet --yes
 ```
 
 The `multiply` function appears in the debug UI after regeneration and redeployment.
@@ -50,11 +51,12 @@ The `multiply` function appears in the debug UI after regeneration and redeploym
 stacksdapp add relayer
 stacksdapp add token --template sip010
 stacksdapp add nft --template sip009
+stacksdapp add legacy --clarity-version 5
 ```
 
-Each command creates the `.clar` file, updates `Clarinet.toml`, regenerates bindings, and updates the debug UI.
+Each command creates the `.clar` file, a Vitest test file, updates `Clarinet.toml` with the correct epoch, and regenerates bindings.
 
-See [Working with contracts](/contracts) for a full sample contract and tests.
+See [Working with contracts](/contracts) for SIP token templates and [Clarity versions](/clarity-versions) for version selection.
 
 ## Run tests
 
@@ -75,18 +77,23 @@ stacksdapp check
 Stacks contracts are immutable. Redeploying creates versioned contracts:
 
 ```bash
-stacksdapp deploy --network testnet
+stacksdapp deploy --network testnet --yes
 # counter-v2, counter-v3, ...
 ```
 
-The CLI handles versioning automatically.
+The CLI handles versioning automatically unless you pass `--no-auto-version`.
 
 ## Project structure
 
 ```
 my-app/
+├── stacksdapp.toml              # project marker + defaults.network
+├── AGENTS.md                    # agent pointer
+├── package.json                 # npm scripts (dev, generate, deploy, setup-hooks)
+├── .githooks/pre-commit         # mnemonic guard
+├── .cursor/skills/scaffold-stacks/
 ├── contracts/
-│   ├── Clarinet.toml
+│   ├── Clarinet.toml            # clarity_version = 6, epoch = "4.0"
 │   ├── .cache/
 │   ├── settings/
 │   │   ├── Devnet.toml
@@ -139,7 +146,7 @@ function CounterComponent() {
   const { data, loading, call } = useCounterIncrement()
 
   return (
-    <button onClick={() => call([{ n: 1 }])}>
+    <button onClick={() => call([])}>
       {loading ? 'Incrementing...' : 'Increment'}
     </button>
   )
@@ -148,7 +155,7 @@ function CounterComponent() {
 
 ### Wallet Connect
 
-`WalletConnect.tsx` handles Leather and Xverse, including network detection.
+`WalletConnect.tsx` handles Leather and Xverse, including network detection. Wallet signing is for **testnet/mainnet**. Devnet uses public burner keys with no wallet popup.
 
 ### State management
 
@@ -160,4 +167,4 @@ Jotai atoms sync wallet and network state across the template.
 stacksdapp dev --auto-deploy
 ```
 
-See [Local devnet](/local-devnet) for manual deploy and devnet setup.
+See [Local devnet](/local-devnet) for manual deploy, PoX settings, and devnet caveats.
