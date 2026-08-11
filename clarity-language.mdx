@@ -1,0 +1,141 @@
+---
+title: "Clarity language"
+description: "Clarity language guide for Scaffold Stacks developers — syntax essentials, learning resources, and daily patterns for Stacks smart contract development."
+keywords: ["Clarity language", "Clarity smart contracts", "Stacks Clarity", "Clarity tutorial", "Scaffold Stacks"]
+---
+
+Scaffold Stacks handles deploy, bindings, and frontend — **you still write Clarity** in `contracts/contracts/*.clar`. For language depth, use official Stacks docs. This page routes you there and lists syntax you will use daily.
+
+## Contents
+
+- [Learning resources](#learning-resources)
+- [Scaffold workflow](#scaffold-workflow)
+- [Syntax essentials](#syntax-essentials)
+- [Responses and errors](#responses-and-errors)
+- [Built-in context](#built-in-context)
+- [Maps and lists](#maps-and-lists)
+- [Tokens](#tokens)
+
+## Learning resources
+
+| Need | Resource |
+| --- | --- |
+| First-time Clarity | [Clarity Crash Course](https://docs.stacks.co/get-started/clarity-crash-course) |
+| Structured book | [Clarity Book](https://book.clarity-lang.org/) |
+| Interactive course | [Clarity Universe](https://clarity-lang.org/universe) |
+| Browser REPL | [Clarity Playground](https://play.stackslabs.com/) |
+| Function/type reference | [Clarity Reference](https://docs.stacks.co/reference/clarity/functions) |
+| Language spec (SIP-002) | [SIP-002 Smart Contract Language](https://github.com/stacksgov/sips/blob/main/sips/sip-002/sip-002-smart-contract-language.md) |
+
+## Scaffold workflow
+
+```bash
+# edit contracts/contracts/my-contract.clar
+stacksdapp check          # Clarinet type-check + check_checker
+stacksdapp test           # Vitest + simnet in contracts/tests/
+stacksdapp generate       # refresh frontend hooks
+stacksdapp deploy --network testnet --yes
+```
+
+Contract tests live in `contracts/tests/*.test.ts` — no Docker. See [Testing](/testing).
+
+Default new projects use **Clarity 6** (epoch 4.0). See [Clarity versions](/clarity-versions).
+
+## Syntax essentials
+
+Clarity is LISP-like: expressions in parentheses.
+
+### Data variables
+
+```clarity
+(define-data-var counter uint u0)
+(var-get counter)
+(var-set counter (+ (var-get counter) u1))
+```
+
+### Functions
+
+| Form | Who can call | Mutates state |
+| --- | --- | --- |
+| `define-read-only` | Anyone | No |
+| `define-public` | Anyone | Yes (via ok path) |
+| `define-private` | Same contract only | Yes |
+
+```clarity
+(define-read-only (get-count)
+  (ok (var-get counter)))
+
+(define-public (increment)
+  (begin
+    (var-set counter (+ (var-get counter) u1))
+    (ok (var-get counter))))
+```
+
+## Responses and errors
+
+Public functions return `(response T uint)` — success `(ok value)` or error `(err uint)`:
+
+```clarity
+(define-constant ERR_UNAUTHORIZED (err u401))
+
+(define-public (admin-only)
+  (begin
+    (asserts! (is-eq tx-sender CONTRACT_OWNER) ERR_UNAUTHORIZED)
+    (ok true)))
+```
+
+- `asserts!` — aborts with err if condition is false
+- `try!` — unwraps ok or propagates err
+
+## Built-in context
+
+| Name | Meaning |
+| --- | --- |
+| `tx-sender` | Principal that signed the transaction |
+| `contract-caller` | Immediate caller (may differ with contract calls) |
+| `block-height` | Stacks block height |
+| `burn-block-height` | Bitcoin block height |
+| `current-contract` | This contract's principal |
+
+Use `tx-sender` vs `contract-caller` carefully for access control. See [Contracts](/contracts).
+
+## Maps and lists
+
+```clarity
+(define-map balances principal uint)
+
+(map-set balances tx-sender u100)
+(map-get? balances tx-sender)
+
+(define-data-var ids (list 10 uint) (list))
+```
+
+## Tokens
+
+For SIP-010 fungible tokens and SIP-009 NFTs, use scaffold templates instead of writing from scratch:
+
+```bash
+stacksdapp add my-token --template sip010
+stacksdapp add my-nft --template sip009
+```
+
+Full trait tables and `impl-trait` rules: [SIP standards](/sip-standards)
+
+Low-level token primitives:
+
+```clarity
+(define-fungible-token my-token)
+(ft-mint? my-token amount recipient)
+(ft-transfer? my-token amount sender recipient)
+
+(define-non-fungible-token my-nft uint)
+(nft-mint? my-nft token-id recipient)
+(nft-transfer? my-nft token-id sender recipient)
+```
+
+## Next steps
+
+- [Contracts](/contracts) — add and test contracts
+- [Clarity versions](/clarity-versions) — C4/C5/C6 epoch mapping
+- [SIP standards](/sip-standards) — token and NFT templates
+- [Workflows](/workflows) — common development patterns
