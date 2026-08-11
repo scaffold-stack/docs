@@ -1,0 +1,70 @@
+---
+title: "AI agents"
+description: "Use the bundled Scaffold Stacks agent skill and AGENTS.md with Cursor, Claude Code, and other AI tools to build Stacks dApps with stacksdapp."
+keywords: ["Scaffold Stacks AI", "Cursor Stacks", "Clarity AI agent", "stacksdapp agent skill"]
+---
+
+Every project scaffolded with `stacksdapp new` or initialized with `stacksdapp init` includes a bundled agent skill. AI assistants can follow Scaffold Stacks conventions without extra setup.
+
+## Contents
+
+- [What gets installed](#what-gets-installed)
+- [Cursor](#cursor)
+- [Other agents](#other-agents)
+- [Refreshing the skill](#refreshing-the-skill)
+- [Security hooks](#security-hooks)
+
+## What gets installed
+
+```
+my-app/
+├── AGENTS.md                              # Quick pointer for any agent
+└── .cursor/skills/scaffold-stacks/
+    ├── SKILL.md                           # Main skill (commands, rules, workflows)
+    ├── cli-reference.md                   # Full CLI flags and exit codes
+    ├── frontend.md                        # Hooks, wallet, devnet signing
+    ├── clarity-language.md                # Clarity cheat sheet
+    ├── clarity-versions.md                # C4/C5/C6 epoch mapping
+    ├── sip-standards.md                   # SIP-010/009 templates and impl-trait rules
+    ├── project-layout.md                  # Directory structure
+    ├── workflows.md                       # New, adopt, upgrade, CI patterns
+    └── troubleshooting.md                 # Common errors and fixes
+```
+
+The skill covers commands, project layout, Clarity versions, SIP token templates, frontend hooks, and troubleshooting.
+
+## Cursor
+
+Cursor auto-discovers `.cursor/skills/scaffold-stacks/SKILL.md`. No configuration is required.
+
+When working in a scaffolded project, the agent knows to:
+
+- Edit only `contracts/contracts/*.clar` and frontend components (not generated files)
+- Run `stacksdapp check` → `generate` → `test` after contract changes
+- Prefer testnet for deploy verification
+- Use `stacksdapp add --template sip010|sip009` instead of hand-written tokens
+
+## Other agents
+
+For Claude Code, Codex, or other tools, point the agent at:
+
+1. `AGENTS.md` in the project root
+2. `.cursor/skills/scaffold-stacks/SKILL.md` for full guidance
+
+## Refreshing the skill
+
+Run `stacksdapp upgrade` to refresh the bundled skill files alongside npm dependencies and generated bindings. This is non-destructive to your contracts and frontend code.
+
+## Security hooks
+
+Scaffolded projects include a git pre-commit hook at `.githooks/pre-commit` that blocks likely seed phrases in `contracts/settings/Testnet.toml` and `Mainnet.toml`.
+
+After cloning a repo, enable hooks:
+
+```bash
+npm run setup-hooks
+# or
+git config core.hooksPath .githooks
+```
+
+`stacksdapp doctor --strict` warns if hooks are not configured.
