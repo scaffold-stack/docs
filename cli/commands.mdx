@@ -1,12 +1,15 @@
 ---
-title: "CLI commands"
-description: "Compact reference for stacksdapp flags and commands"
+title: "stacksdapp CLI reference"
+description: "Complete stacksdapp CLI reference — new, init, deploy, dev, generate, test, doctor, add, upgrade, and all flags for Scaffold Stacks projects on the Stacks blockchain."
+keywords: ["stacksdapp CLI", "stacksdapp commands", "Scaffold Stacks CLI", "Stacks deployment", "Clarinet CLI"]
 ---
 
 Syntax and flags only. For walkthroughs and layout examples, see the Guides tab.
 
 ## Contents
 
+- [Global flags](#global-flags)
+- [Exit codes](#exit-codes)
 - [Command overview](#command-overview)
 - [new](#new)
 - [add](#add)
@@ -14,63 +17,113 @@ Syntax and flags only. For walkthroughs and layout examples, see the Guides tab.
 - [generate](#generate)
 - [deploy](#deploy)
 - [test, check, clean](#test-check-clean)
+- [init, upgrade, doctor](#init-upgrade-doctor)
 - [Configuration files](#configuration-files)
+- [Name validation](#name-validation)
+- [JSON output](#json-output)
+
+## Global flags
+
+| Flag | Description |
+| --- | --- |
+| `-v`, `--verbosity` | Repeat for more diagnostic output |
+| `-q`, `--quiet` | Suppress non-error output |
+| `--json` | Machine-readable JSON output (implies quiet logs) |
+| `--color auto\|always\|never` | Terminal colors (default `auto`) |
+| `--root PATH` | Project root (env: `STACKSDAPP_ROOT`) |
+
+The CLI walks up from the current directory looking for `stacksdapp.toml` or `contracts/Clarinet.toml`.
+
+## Exit codes
+
+| Code | Meaning |
+| --- | --- |
+| 0 | Success |
+| 1 | Generic / unexpected error |
+| 2 | Project not found |
+| 3 | Prerequisite / doctor failure |
+| 4 | User aborted |
+| 5 | Validation error |
+| 6 | Clarity check failed |
+| 7 | Tests failed |
+| 8 | Deploy failed |
+| 10 | Generate failed |
+
+With `--json`, failures include `"ok": false`, `"code"`, and `"exit_code"`.
 
 ## Command overview
 
 ```bash
 stacksdapp --version
-stacksdapp doctor              # prerequisite checks (Clarinet 3.21+)
+stacksdapp doctor              # prerequisite checks (Clarinet 3.23+)
+stacksdapp doctor --strict     # warnings become non-zero exit
+stacksdapp completions bash    # shell completions
 ```
 
 | Command | Description |
 | --- | --- |
 | `stacksdapp new <name>` | Scaffold a new monorepo |
 | `stacksdapp init` | Adopt an existing Clarinet project ([guide](/adopt-existing)) |
-| `stacksdapp upgrade` | Refresh deps and regenerate bindings ([guide](/upgrade)) |
-| `stacksdapp doctor` | Check Rust, Node, Clarinet 3.21+, Docker, git |
+| `stacksdapp upgrade` | Refresh deps, bindings, hooks, and agent skill ([guide](/upgrade)) |
+| `stacksdapp doctor` | Check Rust, Node, Clarinet 3.23+, Docker, git hooks |
 | `stacksdapp add <name>` | Add a blank Clarity contract |
 | `stacksdapp add <name> --template sip010` | SIP-010 fungible token |
 | `stacksdapp add <name> --template sip009` | SIP-009 NFT |
+| `stacksdapp add <name> --clarity-version 5` | Add with Clarity 5 (epoch 3.4) |
 | `stacksdapp generate` | Regenerate TypeScript bindings ([guide](/code-generation)) |
 | `stacksdapp generate --watch` | Regenerate on `.clar` changes |
 | `stacksdapp test` | Contract and frontend tests ([guide](/testing)) |
 | `stacksdapp check` | Type-check Clarity contracts |
 | `stacksdapp clean` | Remove generated files and devnet state |
+| `stacksdapp clean --force` | Skip confirmation prompt |
 | `stacksdapp dev` | Local devnet + frontend + watcher ([guide](/local-devnet)) |
 | `stacksdapp dev --auto-deploy` | Devnet and deploy once the chain is ready |
+| `stacksdapp dev --keep-state` | Devnet: preserve cache between runs |
 | `stacksdapp dev --network testnet` | Frontend against testnet |
 | `stacksdapp dev --network mainnet` | Frontend against mainnet |
 | `stacksdapp deploy --network <net>` | Deploy contracts (`devnet`, `testnet`, `mainnet`) |
 | `stacksdapp deploy --network testnet --contract <name>` | Deploy one contract |
 | `stacksdapp deploy --network testnet --dry-run` | Plan and fee estimate, no broadcast |
+| `stacksdapp deploy --network testnet --yes` | Non-interactive deploy (required for CI) |
+| `stacksdapp deploy --network testnet --wait-confirm` | Poll until on-chain confirmation |
+| `stacksdapp deploy --network testnet --no-auto-version` | Fail on name collision instead of auto-versioning |
 
 ## new
 
 ```bash
 stacksdapp new my-dapp
+stacksdapp new my-dapp --no-git    # skip git init
 ```
+
+Creates contracts, frontend, `stacksdapp.toml`, git hooks, agent skill, and a default counter contract (Clarity 6).
 
 ## add
 
 ```bash
 stacksdapp add my-contract
+stacksdapp add my-contract --clarity-version 5
 stacksdapp add token --template sip010
 stacksdapp add nft --template sip009
 ```
 
-Creates `contracts/contracts/<name>.clar`, updates `Clarinet.toml`, and regenerates bindings.
+| Flag | Default | Description |
+| --- | --- | --- |
+| `--template` | `blank` | `blank`, `sip010`, or `sip009` |
+| `--clarity-version` | `6` | `4`, `5`, or `6` (sets matching epoch) |
+
+Creates `contracts/contracts/<name>.clar`, updates `Clarinet.toml`, adds trait requirements for SIP templates, and regenerates bindings.
 
 ## dev
 
 ```bash
 stacksdapp dev                         # local Docker devnet
 stacksdapp dev --auto-deploy           # deploy when chain is healthy
+stacksdapp dev --keep-state            # preserve devnet cache
 stacksdapp dev --network testnet
 stacksdapp dev --network mainnet
 ```
 
-Default with no `--network` starts local devnet (Docker required).
+Default with no `--network` starts local devnet (Docker required). Do not run `clarinet devnet start` alongside `stacksdapp dev`.
 
 ## generate
 
@@ -87,6 +140,7 @@ stacksdapp deploy --network mainnet
 stacksdapp deploy --network devnet
 stacksdapp deploy --network testnet --contract counter
 stacksdapp deploy --network testnet --dry-run
+stacksdapp deploy --network testnet --yes
 ```
 
 | Flag | Description |
@@ -94,6 +148,9 @@ stacksdapp deploy --network testnet --dry-run
 | `--network <network>` | `testnet`, `mainnet`, or `devnet` |
 | `--contract <name>` | Deploy only one contract |
 | `--dry-run` | Print plan and estimated fee without broadcasting |
+| `-y`, `--yes` | Non-interactive (required for CI and agents) |
+| `--wait-confirm` | Poll until confirmed on-chain (testnet/mainnet) |
+| `--no-auto-version` | Fail instead of renaming on collision (`counter-v2`, etc.) |
 
 Guides: [testnet](/testnet) · [mainnet](/mainnet) · [local devnet](/local-devnet)
 
@@ -103,16 +160,88 @@ Guides: [testnet](/testnet) · [mainnet](/mainnet) · [local devnet](/local-devn
 stacksdapp test
 stacksdapp check
 stacksdapp clean
+stacksdapp clean --force
+```
+
+## init, upgrade, doctor
+
+### init
+
+Adopt an existing Clarinet project. Adds frontend (if missing), support files, bindings, git hooks, and agent skill.
+
+```bash
+stacksdapp init
+```
+
+Expects `Clarinet.toml` at repo root **or** `contracts/Clarinet.toml`. Normalizes standard Clarinet layout. Guide: [Adopt an existing project](/adopt-existing)
+
+### upgrade
+
+Refresh npm deps, regenerate bindings, refresh git hooks and agent skill. Non-destructive to user contracts.
+
+```bash
+stacksdapp upgrade
+```
+
+Guide: [Upgrade a project](/upgrade)
+
+### doctor
+
+Checks Rust 1.75+, Node 20+, Clarinet 3.23+, Docker (for devnet), git hooks path.
+
+```bash
+stacksdapp doctor
+stacksdapp doctor --strict    # warnings → non-zero exit
+```
+
+### completions
+
+Generate shell completions:
+
+```bash
+stacksdapp completions bash
+stacksdapp completions zsh
+stacksdapp completions fish
+stacksdapp completions powershell
+stacksdapp completions elvish
 ```
 
 ## Configuration files
 
 | Path | Role |
 | --- | --- |
-| `contracts/Clarinet.toml` | Contract registry (full scaffold layout) |
-| `contracts/settings/Devnet.toml` | Local accounts (mnemonic warning shown in CLI) |
+| `stacksdapp.toml` | Project marker; `defaults.network` |
+| `contracts/Clarinet.toml` | Contract registry, `clarity_version`, `epoch` per contract |
+| `contracts/settings/Devnet.toml` | Local accounts (public burner mnemonics, PoX stacking orders) |
 | `contracts/settings/Testnet.toml` | Deployer mnemonic for testnet |
 | `contracts/settings/Mainnet.toml` | Deployer mnemonic for mainnet |
-| `frontend/.env.local` | Auto-managed network config; optional `NEXT_PUBLIC_HIRO_API_KEY` |
+| `frontend/.env.local` | `NEXT_PUBLIC_NETWORK`; optional `NEXT_PUBLIC_HIRO_API_KEY` |
 | `contracts/.cache/` | Cached ABIs (skip redundant `initSimnet`) |
 | `frontend/src/generated/*` | Generated bindings. Do not edit by hand. |
+| `.githooks/pre-commit` | Blocks likely seed phrases in Testnet/Mainnet settings |
+| `.cursor/skills/scaffold-stacks/` | Bundled agent skill |
+| `AGENTS.md` | Agent pointer at project root |
+
+After cloning, enable git hooks:
+
+```bash
+npm run setup-hooks
+# or
+git config core.hooksPath .githooks
+```
+
+## Name validation
+
+- **Project name:** single segment, letters/digits/`-`/`_`, no `..` or absolute paths, max 64 chars
+- **Contract name:** Clarity identifier, letter first, max 40 chars
+
+## JSON output
+
+With `--json`, success payloads include `"ok": true` and command-specific fields. Failures include `"ok": false`, `"error"`, `"code"`, and `"exit_code"`.
+
+```bash
+stacksdapp doctor --json
+stacksdapp deploy --network testnet --dry-run --json
+```
+
+Use exit codes for CI scripting. Error fixes: [Troubleshooting](/troubleshooting)
