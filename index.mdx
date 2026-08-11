@@ -1,11 +1,12 @@
 ---
-title: "Introduction"
-description: "Build full-stack dApps on Stacks with auto-generated TypeScript bindings and one-command deployment"
+title: "Scaffold Stacks"
+description: "Build full-stack Stacks (Bitcoin L2) dApps with the stacksdapp CLI — auto-generated TypeScript bindings, Clarity smart contracts, and one-command testnet or mainnet deployment."
+keywords: ["Scaffold Stacks", "stacksdapp", "Stacks dApp", "Stacks blockchain", "Clarity", "Bitcoin L2", "smart contracts"]
 ---
 
-Scaffold Stacks is a Rust CLI (`stacksdapp`) and Next.js template for building full-stack Stacks (Bitcoin L2) dApps. It generates type-safe TypeScript bindings from Clarity contracts, ships a live debug UI, and supports one-command deployment to testnet, mainnet, or local devnet.
+Scaffold Stacks is the official **stacksdapp CLI** and Next.js template for building full-stack **Stacks (Bitcoin L2) dApps**. Write **Clarity smart contracts**, get auto-generated TypeScript bindings, ship a live debug UI, and deploy to **Stacks testnet**, **mainnet**, or local devnet with one command.
 
-If you are new, start with the quickstart. If you already have a Clarinet project, use the adopt guide. For command syntax, see the CLI reference tab.
+Install with `cargo install stacksdapp`, scaffold with `stacksdapp new my-app`, and follow the [quickstart](/quickstart). Already on Clarinet? Use [adopt an existing project](/adopt-existing). For every command and flag, see the [stacksdapp CLI reference](/cli/commands).
 
 ### Looking for guides on...
 
@@ -13,20 +14,26 @@ If you are new, start with the quickstart. If you already have a Clarinet projec
   <Card title="Quickstart" icon="rocket" href="/quickstart">
     Deploy your first dApp to testnet in five steps.
   </Card>
-  <Card title="Prerequisites" icon="check" href="/prerequisites">
-    Install Rust, Node, Clarinet 3.21+, and verify with `stacksdapp doctor`.
-  </Card>
-  <Card title="Developer workflow" icon="pen-to-square" href="/development">
-    Edit contracts, regenerate bindings, run tests, and redeploy.
-  </Card>
-  <Card title="Code generation" icon="code" href="/code-generation">
-    TypeScript bindings, React hooks, debug UI, and ABI caching.
+  <Card title="Workflows" icon="route" href="/workflows">
+    Step-by-step patterns for common tasks and CI.
   </Card>
   <Card title="Adopt existing project" icon="folder-open" href="/adopt-existing">
     Bring a Clarinet repo onto Scaffold Stacks with `stacksdapp init`.
   </Card>
-  <Card title="CLI reference" icon="terminal" href="/cli/commands">
-    Command flags and configuration file paths.
+  <Card title="Upgrade project" icon="arrow-up" href="/upgrade">
+    Refresh deps, bindings, hooks, and agent skill.
+  </Card>
+  <Card title="stacksdapp CLI reference" icon="terminal" href="/cli/commands">
+    Command flags, exit codes, and configuration files.
+  </Card>
+  <Card title="Troubleshooting" icon="wrench" href="/troubleshooting">
+    Common errors, exit codes, and fixes.
+  </Card>
+  <Card title="Frontend hooks" icon="code" href="/frontend">
+    Generated hooks, wallet, devnet signing, custom UI.
+  </Card>
+  <Card title="SIP-010 / SIP-009" icon="coins" href="/sip-standards">
+    Token and NFT templates with impl-trait rules.
   </Card>
 </CardGroup>
 
@@ -35,8 +42,24 @@ If you are new, start with the quickstart. If you already have a Clarinet projec
 - **Auto-generated TypeScript bindings**: Type-safe code from Clarity ABIs, with ABI caching for fast regenerate
 - **Live debug UI**: Interactive forms for every contract function
 - **One-command deployment**: Testnet, mainnet, or local Docker devnet (optional `--auto-deploy`)
-- **Contract templates**: SIP-010 tokens and SIP-009 NFTs
+- **Contract templates**: SIP-010 tokens and SIP-009 NFTs with `--clarity-version` support
+- **Clarity 6 by default**: New projects use Clarity 6 with epoch 4.0
 - **Adopt existing Clarinet projects**: `stacksdapp init` without starting from scratch
+- **Bundled AI agent skill**: Cursor-ready skill files and `AGENTS.md` in every project
+- **Git security hooks**: Pre-commit guard against committing deployer mnemonics
+
+## Documentation map
+
+| Topic | Guide |
+| --- | --- |
+| Install tools | [Prerequisites](/prerequisites) |
+| First deploy | [Quickstart](/quickstart) |
+| Project structure | [Project layout](/project-layout) |
+| Edit contracts | [Developer workflow](/development) · [Clarity language](/clarity-language) |
+| Token / NFT dApps | [SIP standards](/sip-standards) |
+| React hooks | [Frontend](/frontend) · [Code generation](/code-generation) |
+| Testnet / mainnet / devnet | [Testnet](/testnet) · [Mainnet](/mainnet) · [Local devnet](/local-devnet) |
+| Errors | [Troubleshooting](/troubleshooting) |
 
 ## Requirements
 
@@ -44,7 +67,7 @@ If you are new, start with the quickstart. If you already have a Clarinet projec
 | --- | --- |
 | Rust | 1.75+ |
 | Node.js | 20+ |
-| Clarinet | 3.21+ |
+| Clarinet | 3.23+ (required for Clarity 6 devnet) |
 | Wallet | Leather or Xverse |
 
 Need help? Join the [Scaffold Stacks Telegram group](https://telegram.me/+CBp6wSIiXNhmMjZk).
