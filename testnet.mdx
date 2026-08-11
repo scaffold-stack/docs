@@ -1,9 +1,10 @@
 ---
 title: "Testnet deployment"
-description: "Deploy your dApp to Stacks testnet"
+description: "Deploy Clarity smart contracts to Stacks testnet with stacksdapp deploy — faucet STX, dry-run fees, and publish your dApp for testing."
+keywords: ["Stacks testnet deploy", "stacksdapp deploy testnet", "Clarity testnet", "Scaffold Stacks testnet"]
 ---
 
-Deploy to Stacks testnet to test your dApp with real network conditions before mainnet.
+Deploy to Stacks testnet to test your dApp with real network conditions before mainnet. Testnet is the recommended first deploy target (no Docker required).
 
 ## Contents
 
@@ -19,7 +20,7 @@ Deploy to Stacks testnet to test your dApp with real network conditions before m
 
 | Requirement | Notes |
 | --- | --- |
-| Clarinet | 3.21+ (`stacksdapp doctor`) |
+| Clarinet | 3.23+ (`stacksdapp doctor`) |
 | Testnet STX | Gas fees |
 | Testnet sBTC | Only if your contracts use it |
 | Deployer mnemonic | In `contracts/settings/Testnet.toml` |
@@ -36,13 +37,18 @@ mnemonic = "your 24 word seed phrase"
 derivation = "m/44'/5757'/0'/0/0"
 ```
 
+<Warning>
+  Never commit real mnemonics. The bundled pre-commit hook blocks likely seed phrases in Testnet.toml and Mainnet.toml.
+</Warning>
+
 ## Deploy to testnet
 
 ```bash
-stacksdapp deploy --network testnet
+stacksdapp check && stacksdapp generate && stacksdapp test
+stacksdapp deploy --network testnet --yes
 ```
 
-Preview without broadcasting:
+Use `--yes` for non-interactive deploys (CI and agents). Preview without broadcasting:
 
 ```bash
 stacksdapp deploy --network testnet --dry-run
@@ -52,6 +58,12 @@ Deploy a single contract:
 
 ```bash
 stacksdapp deploy --network testnet --contract counter
+```
+
+Wait for on-chain confirmation:
+
+```bash
+stacksdapp deploy --network testnet --yes --wait-confirm
 ```
 
 This generates a deployment plan, submits transactions, and updates `deployments.json`.
@@ -75,11 +87,11 @@ Opens at `http://localhost:3000` connected to testnet.
 Contracts are immutable. Changes create new versions:
 
 ```bash
-stacksdapp deploy --network testnet
+stacksdapp deploy --network testnet --yes
 # counter-v2, counter-v3, ...
 ```
 
-The CLI handles versioning automatically.
+The CLI handles versioning automatically unless you pass `--no-auto-version`.
 
 ## Troubleshooting
 
@@ -88,15 +100,18 @@ The CLI handles versioning automatically.
 - Check gas fees
 - Verify mnemonic and derivation path
 - Ensure sufficient testnet balance
+- Add `--yes` if deploy hangs on interactive prompts
 
 ### Contract errors
 
 - Run `stacksdapp check` for syntax validation
 - Test locally with [devnet](/local-devnet) first
 - Check contract requirements
+- For SIP tokens: omit `(impl-trait …)` on testnet (templates ship without it)
 
 ### Frontend issues
 
-- Verify network configuration in `.env.local`
+- Verify network configuration in `.env.local` (`NEXT_PUBLIC_NETWORK=testnet`)
 - Check browser console for errors
 - Ensure wallet is set to testnet
+- Do not run `stacksdapp dev` (devnet) when contracts were deployed to testnet
