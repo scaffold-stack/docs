@@ -1,9 +1,10 @@
 ---
 title: "Upgrade a project"
-description: "Refresh dependencies and regenerate TypeScript bindings with stacksdapp upgrade"
+description: "Upgrade Scaffold Stacks dependencies, regenerate TypeScript bindings and React hooks, and refresh the agent skill with stacksdapp upgrade."
+keywords: ["Scaffold Stacks upgrade", "stacksdapp upgrade", "regenerate Clarity bindings", "Stacks project update"]
 ---
 
-Run `stacksdapp upgrade` on an existing Scaffold Stacks project to refresh npm dependencies and regenerate TypeScript bindings. It does not rescaffold your repo or overwrite application code.
+Run `stacksdapp upgrade` on an existing Scaffold Stacks project to refresh npm dependencies, regenerate TypeScript bindings, update git hooks, and refresh the bundled agent skill. It does not rescaffold your repo or overwrite application code.
 
 ## Contents
 
@@ -22,7 +23,7 @@ Your project must already use the scaffold layout:
 | `contracts/Clarinet.toml` | Yes |
 | `frontend/package.json` | Yes |
 
-Clarinet **3.21+** is required. Run `stacksdapp doctor` to verify your toolchain.
+Clarinet **3.23+** is required. Run `stacksdapp doctor` to verify your toolchain.
 
 ## Run upgrade
 
@@ -33,9 +34,14 @@ stacksdapp upgrade
 
 The command:
 
-1. Refreshes npm dependencies in `frontend/` and `contracts/`
-2. Runs `npm ci` when a `package-lock.json` is present
-3. Runs `stacksdapp generate`
+1. Normalizes standard Clarinet layout if needed
+2. Writes `stacksdapp.toml` if missing
+3. Refreshes npm dependencies in `frontend/` and `contracts/`
+4. Runs `npm ci` when a `package-lock.json` is present
+5. Runs `stacksdapp generate`
+6. Refreshes `.githooks/pre-commit` (mnemonic guard)
+7. Refreshes bundled agent skill files
+8. Sets `git config core.hooksPath .githooks` when in a git repo
 
 You should see install progress for both packages, then codegen output.
 
@@ -44,13 +50,14 @@ You should see install progress for both packages, then codegen output.
 - After installing a newer `stacksdapp` release
 - After Clarinet or `@stacks/clarinet-sdk` template updates
 - When generated files no longer match your `.clar` sources
+- To refresh the AI agent skill and git hooks to the latest versions
 
 ## Init vs upgrade
 
 | Command | Use case |
 | --- | --- |
 | [`stacksdapp init`](/adopt-existing) | First time adopting an existing Clarinet project |
-| `stacksdapp upgrade` | Project is already scaffolded; refresh deps and bindings |
+| `stacksdapp upgrade` | Project is already scaffolded; refresh deps, bindings, hooks, and skill |
 
 ## After upgrading
 
