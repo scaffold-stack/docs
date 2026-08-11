@@ -1,0 +1,154 @@
+---
+title: "Project layout"
+description: "Scaffold Stacks monorepo structure — contracts/, frontend/, stacksdapp.toml, generated hooks, Clarinet config, and environment variables for Stacks dApp projects."
+keywords: ["Scaffold Stacks project structure", "stacksdapp.toml", "Stacks monorepo", "Clarinet layout"]
+---
+
+Directory structure after `stacksdapp new` or `stacksdapp init`.
+
+## Contents
+
+- [Root](#root)
+- [contracts/](#contracts)
+- [frontend/](#frontend)
+- [Edit matrix](#edit-matrix)
+- [Environment variables](#environment-variables)
+- [Root discovery](#root-discovery)
+- [Git hooks](#git-hooks)
+
+## Root
+
+```text
+.
+├── stacksdapp.toml          # [project] name, [defaults] network = "devnet"
+├── AGENTS.md                # Pointer for AI agents
+├── package.json             # npm scripts wrapping stacksdapp commands
+├── .gitignore
+├── .githooks/
+│   └── pre-commit           # Mnemonic guard for Testnet/Mainnet settings
+└── .cursor/
+    └── skills/
+        └── scaffold-stacks/ # Agent skill (auto-installed)
+```
+
+Root `package.json` scripts:
+
+| Script | Command |
+| --- | --- |
+| `npm run dev` | `stacksdapp dev` |
+| `npm run generate` | `stacksdapp generate` |
+| `npm run deploy` | `stacksdapp deploy` |
+| `npm run test` | `stacksdapp test` |
+| `npm run check` | `stacksdapp check` |
+| `npm run setup-hooks` | `git config core.hooksPath .githooks` |
+
+## contracts/
+
+```text
+contracts/
+├── Clarinet.toml            # [contracts.*] path, clarity_version, epoch
+├── contracts/
+│   └── *.clar               # Clarity source — primary edit surface
+├── settings/
+│   ├── Devnet.toml          # Public burner mnemonics (devnet only)
+│   ├── Testnet.toml         # User's testnet deployer
+│   └── Mainnet.toml         # User's mainnet deployer
+├── tests/
+│   └── *.test.ts            # Vitest + clarinet-sdk
+├── deployments/             # Clarinet deployment plans (updated on deploy)
+├── package.json             # @stacks/clarinet-sdk, vitest
+├── vitest.config.ts
+├── tsconfig.json
+├── .cache/                  # ABI export cache (gitignored)
+└── .devnet/                 # Local devnet state (gitignored)
+```
+
+### Clarinet.toml
+
+Each contract entry includes:
+
+```toml
+[contracts.counter]
+path = "contracts/counter.clar"
+clarity_version = 6
+epoch = "4.0"
+```
+
+Per-contract settings take precedence for deploy. See [Clarity versions](/clarity-versions).
+
+## frontend/
+
+```text
+frontend/
+├── src/
+│   ├── app/                 # Next.js App Router pages
+│   ├── components/          # UI components (editable)
+│   │   └── debug/           # Debug panel wrapper
+│   ├── generated/           # AUTO-GENERATED — run stacksdapp generate
+│   │   ├── contracts.ts
+│   │   ├── hooks.ts
+│   │   ├── DebugContracts.tsx
+│   │   └── deployments.json # Written on deploy
+│   ├── lib/devnet.ts        # Devnet burner signing
+│   ├── store/wallet.ts      # Jotai wallet state
+│   └── scaffold.config.ts   # Network / node URL config
+├── scripts/
+│   ├── export-abi.mjs       # Used by codegen pipeline
+│   └── build-tx.mjs
+├── .env.local               # NEXT_PUBLIC_NETWORK=devnet|testnet|mainnet
+└── package.json
+```
+
+## Edit matrix
+
+| Path | Edit? | Action on change |
+| --- | --- | --- |
+| `contracts/contracts/*.clar` | Yes | `check` → `generate` → `test` |
+| `contracts/Clarinet.toml` | Yes | May need redeploy plan regen |
+| `contracts/tests/*.test.ts` | Yes | `stacksdapp test` |
+| `frontend/src/components/**` | Yes | Normal frontend dev |
+| `frontend/src/generated/**` | **No** | `stacksdapp generate` |
+| `contracts/settings/Testnet.toml` | Yes (local) | Never commit real mnemonics |
+| `contracts/.cache/**` | No | Deleted by `stacksdapp clean` |
+
+## Environment variables
+
+### frontend/.env.local
+
+```bash
+NEXT_PUBLIC_NETWORK=devnet          # devnet | testnet | mainnet
+# NEXT_PUBLIC_STACKS_NODE_URL=...    # optional override
+# NEXT_PUBLIC_HIRO_API_KEY=...       # optional Hiro API key
+```
+
+`stacksdapp dev` and deploy update network-related env as needed.
+
+Frontend hooks, wallet, and signing: [Frontend guide](/frontend)
+
+### Agent / CI
+
+```bash
+STACKSDAPP_ROOT=/path/to/project    # Same as --root
+SCAFFOLD_ALLOW_COMMITTED_MNEMONIC=1 # Emergency only — bypass pre-commit hook
+```
+
+## Root discovery
+
+The CLI walks up from the current directory looking for:
+
+1. `stacksdapp.toml`, or
+2. `contracts/Clarinet.toml`
+
+Standard Clarinet repos (root `Clarinet.toml`) are normalized on `init`/`upgrade` to the nested layout. See [Adopt an existing project](/adopt-existing).
+
+## Git hooks
+
+After clone, enable the mnemonic guard:
+
+```bash
+git config core.hooksPath .githooks
+# or
+npm run setup-hooks
+```
+
+`stacksdapp doctor --strict` warns if hooks are not configured.
