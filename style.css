@@ -1,42 +1,59 @@
-/* Visual style aligned with docs.stacks.co */
+/* Scaffold Stacks docs — calm,  -inspired readability */
 
 :root {
   --stacks-orange: #fc6432;
   --stacks-orange-hover: #d33d00;
   --stacks-orange-soft: #fff8f5;
 
-  --stacks-text: #1d1d1d;
-  --stacks-text-muted: #636267;
-  --stacks-border: #e8e4e2;
+  /* Prose — headings dark, body muted ( -style hierarchy) */
+  --stacks-heading: #18181b;
+  --stacks-text: #52525b;
+  --stacks-text-muted: #71717a;
+  --stacks-border: #e4e4e7;
+  --stacks-border-subtle: #f0f0f2;
   --stacks-sidebar: #fafafa;
   --stacks-card: #ffffff;
+  --stacks-page-bg: #ffffff;
 
-  /* Inline code (commands, paths, flags in prose) */
-  --stacks-code-inline-bg: #f4f3ef;
-  --stacks-code-inline-border: #e3e0db;
-  --stacks-code-inline-text: #252220;
+  /* Inline code — soft pill, no heavy border */
+  --stacks-code-inline-bg: #f4f4f5;
+  --stacks-code-inline-border: transparent;
+  --stacks-code-inline-text: #3f3f46;
 
-  /* Fenced code blocks */
-  --stacks-code-block-bg: #faf9f7;
-  --stacks-code-block-border: #e3e0db;
-  --stacks-code-block-text: #1a1816;
+  /* Fenced blocks — inset panel, minimal border */
+  --stacks-code-block-bg: #f6f6f7;
+  --stacks-code-block-border: #ebebec;
+  --stacks-code-block-text: #27272a;
+
+  /* Layout */
+  --stacks-content-max-width: 735px;
+  --stacks-page-padding-x: 2rem;
+  --stacks-content-padding-x: 0;
+  --stacks-sidebar-padding-x: 2.5rem;
+
+  /* Vertical rhythm */
+  --stacks-section-gap: 2.75rem;
+  --stacks-block-gap: 1.125rem;
 }
 
 .dark,
 html.dark {
-  --stacks-text: #f5f5f5;
-  --stacks-text-muted: #a8a8a8;
-  --stacks-border: #2e2e2e;
-  --stacks-sidebar: #181818;
-  --stacks-card: #1a1a1a;
+  --stacks-heading: #fafafa;
+  --stacks-text: #a1a1aa;
+  --stacks-text-muted: #71717a;
+  --stacks-border: #27272a;
+  --stacks-border-subtle: #1c1c1f;
+  --stacks-sidebar: #0f0f10;
+  --stacks-card: #141416;
+  --stacks-page-bg: #0a0a0b;
 
-  --stacks-code-inline-bg: #2a2725;
-  --stacks-code-inline-border: #3d3835;
-  --stacks-code-inline-text: #f0ebe8;
+  --stacks-code-inline-bg: #1c1c1f;
+  --stacks-code-inline-border: transparent;
+  --stacks-code-inline-text: #d4d4d8;
 
-  --stacks-code-block-bg: #1c1a19;
-  --stacks-code-block-border: #3d3835;
-  --stacks-code-block-text: #ece8e5;
+  --stacks-code-block-bg: #111113;
+  --stacks-code-block-border: #27272a;
+  --stacks-code-block-text: #e4e4e7;
 }
 
 html {
@@ -47,65 +64,135 @@ html {
 }
 
 body {
-  font-size: 16px;
-  line-height: 1.625;
+  font-size: 14px;
+  line-height: 1.75;
   color: var(--stacks-text);
-  letter-spacing: -0.011em;
+  letter-spacing: -0.006em;
 }
 
-/* Page title (Mintlify renders frontmatter title) */
+/* ── Layout ─────────────────────────────────────────────────────────── */
+
+#content-container {
+  padding-left: var(--stacks-page-padding-x) !important;
+  padding-right: var(--stacks-page-padding-x) !important;
+}
+
+#content-area {
+  max-width: var(--stacks-content-max-width) !important;
+  width: 100% !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
+  padding-left: var(--stacks-content-padding-x) !important;
+  padding-right: var(--stacks-content-padding-x) !important;
+}
+
+#content.mdx-content,
+#content-area > .prose {
+  max-width: none;
+  padding-left: var(--stacks-content-padding-x);
+  padding-right: var(--stacks-content-padding-x);
+}
+
+article,
+main > div[class*="content"],
+[data-component-name="Content"] {
+  max-width: none;
+  padding-left: var(--stacks-content-padding-x);
+  padding-right: var(--stacks-content-padding-x);
+}
+
+/* ── Typography — clear hierarchy, muted body ───────────────────────── */
+
 h1,
 #page-title {
   font-family: Inter, ui-sans-serif, system-ui, sans-serif;
-  font-size: 2.25rem;
+  font-size: 1.875rem;
   font-weight: 600;
-  line-height: 1.2;
-  letter-spacing: -0.03em;
-  color: var(--stacks-text);
+  line-height: 1.25;
+  letter-spacing: -0.025em;
+  color: var(--stacks-heading);
+  margin-bottom: 0.5rem;
+}
+
+/* Page description under title */
+#content-area > .prose > p:first-of-type,
+#content > p:first-of-type {
+  font-size: 0.9375rem;
+  line-height: 1.7;
+  color: var(--stacks-text-muted);
+  margin-bottom: var(--stacks-section-gap);
 }
 
 h2 {
-  font-size: 1.375rem;
-  font-weight: 600;
-  line-height: 1.35;
-  letter-spacing: -0.02em;
-  margin-top: 2.25rem;
-  color: var(--stacks-text);
-}
-
-h3 {
   font-size: 1.125rem;
   font-weight: 600;
   line-height: 1.4;
   letter-spacing: -0.015em;
-  color: var(--stacks-text);
+  margin-top: var(--stacks-section-gap);
+  margin-bottom: 0.75rem;
+  padding-top: 0.25rem;
+  color: var(--stacks-heading);
+}
+
+h3 {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  line-height: 1.45;
+  letter-spacing: -0.01em;
+  margin-top: 1.75rem;
+  margin-bottom: 0.5rem;
+  color: var(--stacks-heading);
 }
 
 h4 {
-  font-size: 1rem;
+  font-size: 0.875rem;
   font-weight: 600;
-  line-height: 1.45;
-  color: var(--stacks-text);
+  line-height: 1.5;
+  margin-top: 1.25rem;
+  margin-bottom: 0.375rem;
+  color: var(--stacks-heading);
 }
 
 p,
 li {
-  font-size: 1rem;
-  line-height: 1.625;
+  font-size: 0.875rem;
+  line-height: 1.75;
   color: var(--stacks-text);
 }
 
 p + p {
-  margin-top: 1rem;
+  margin-top: var(--stacks-block-gap);
 }
 
-small {
-  font-size: 0.875rem;
-  line-height: 1.5;
+/* Lists — airy, not cramped */
+ul,
+ol {
+  margin: 0.75rem 0 1.25rem;
+  padding-left: 1.25rem;
+}
+
+li {
+  margin-top: 0.375rem;
+  margin-bottom: 0.375rem;
+}
+
+li::marker {
   color: var(--stacks-text-muted);
 }
 
-/* Inline code and commands in prose */
+strong {
+  color: var(--stacks-heading);
+  font-weight: 600;
+}
+
+small {
+  font-size: 0.8125rem;
+  line-height: 1.6;
+  color: var(--stacks-text-muted);
+}
+
+/* ── Inline code — subtle pills ( -style) ─────────────────────── */
+
 :not(pre) > code,
 p code,
 li code,
@@ -117,12 +204,12 @@ h3 code,
 h4 code {
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono",
     "Courier New", monospace;
-  font-size: 0.9375rem;
-  font-weight: 500;
-  line-height: 1.4;
+  font-size: 0.8125rem;
+  font-weight: 400;
+  line-height: 1.5;
   letter-spacing: 0;
-  padding: 0.2em 0.45em;
-  border-radius: 0.375rem;
+  padding: 0.15em 0.4em;
+  border-radius: 0.3125rem;
   border: 1px solid var(--stacks-code-inline-border);
   background: var(--stacks-code-inline-bg);
   color: var(--stacks-code-inline-text);
@@ -130,23 +217,43 @@ h4 code {
   -webkit-box-decoration-break: clone;
 }
 
-/* Fenced code blocks */
+/* ── Fenced code blocks — inset panels, generous padding ────────────── */
+
 pre,
 [data-component-name="CodeBlock"] pre,
 article pre,
-#content-area pre {
+#content-area pre,
+.code-block pre {
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono",
     "Courier New", monospace;
-  font-size: 0.9375rem;
-  line-height: 1.65;
+  font-size: 0.8125rem;
+  line-height: 1.7;
   letter-spacing: 0;
-  margin: 1.25rem 0;
+  margin: 1rem 0 1.5rem;
   padding: 1rem 1.25rem;
-  border-radius: 0.75rem;
+  border-radius: 0.625rem;
   border: 1px solid var(--stacks-code-block-border);
   background: var(--stacks-code-block-bg);
   color: var(--stacks-code-block-text);
   overflow-x: auto;
+}
+
+/* Mintlify code block wrapper — remove double chrome */
+.code-block,
+[data-component-name="CodeBlock"] {
+  margin: 1rem 0 1.5rem;
+  border-radius: 0.625rem;
+  border: 1px solid var(--stacks-code-block-border);
+  background: var(--stacks-code-block-bg);
+  overflow: hidden;
+}
+
+.code-block pre,
+[data-component-name="CodeBlock"] pre {
+  margin: 0;
+  border: none;
+  border-radius: 0;
+  background: transparent;
 }
 
 pre code,
@@ -166,7 +273,6 @@ article pre code,
   border-radius: 0;
 }
 
-/* Shiki syntax tokens inherit block styling, not inline pill style */
 pre .shiki,
 pre .shiki span,
 [data-component-name="CodeBlock"] .shiki,
@@ -183,14 +289,30 @@ pre .shiki span,
 kbd {
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono",
     "Courier New", monospace;
-  font-size: 0.875rem;
+  font-size: 0.75rem;
   font-weight: 500;
-  padding: 0.15em 0.45em;
-  border-radius: 0.375rem;
-  border: 1px solid var(--stacks-code-inline-border);
+  padding: 0.12em 0.4em;
+  border-radius: 0.3125rem;
+  border: 1px solid var(--stacks-border);
   background: var(--stacks-code-inline-bg);
   color: var(--stacks-code-inline-text);
-  box-shadow: 0 1px 0 var(--stacks-code-inline-border);
+  box-shadow: none;
+}
+
+/* ── Links — accent without shouting ────────────────────────────────── */
+
+#content a:not([class*="card"]):not([class*="Card"]),
+#content-area a:not([class*="card"]):not([class*="Card"]) {
+  color: var(--stacks-orange);
+  text-decoration: none;
+  font-weight: 500;
+}
+
+#content a:not([class*="card"]):not([class*="Card"]):hover,
+#content-area a:not([class*="card"]):not([class*="Card"]):hover {
+  color: var(--stacks-orange-hover);
+  text-decoration: underline;
+  text-underline-offset: 2px;
 }
 
 a {
@@ -201,63 +323,214 @@ a:hover {
   color: var(--stacks-orange-hover);
 }
 
-/* Tables (requirements blocks) */
+/* ── Tables — low contrast, scannable ───────────────────────────────── */
+
 table {
-  font-size: 0.9375rem;
+  font-size: 0.8125rem;
+  width: 100%;
+  margin: 1rem 0 1.5rem;
+  border-collapse: collapse;
 }
 
 th {
-  font-weight: 600;
-  color: var(--stacks-text);
+  font-weight: 500;
+  font-size: 0.75rem;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: var(--stacks-text-muted);
+  text-align: left;
+  padding: 0.625rem 0.75rem;
+  border-bottom: 1px solid var(--stacks-border);
 }
 
 td {
   color: var(--stacks-text);
+  padding: 0.625rem 0.75rem;
+  border-bottom: 1px solid var(--stacks-border-subtle);
+  vertical-align: top;
+  line-height: 1.6;
 }
 
-/* Card grids (Stacks reference style) */
+tr:last-child td {
+  border-bottom: none;
+}
+
+/* ── Cards — soft borders ───────────────────────────────────────────── */
+
 .card,
 [data-component-name="Card"] {
   border: 1px solid var(--stacks-border);
-  border-radius: 0.75rem;
+  border-radius: 0.625rem;
   background: var(--stacks-card);
+  transition: border-color 0.15s ease;
+}
+
+.card:hover,
+[data-component-name="Card"]:hover {
+  border-color: var(--stacks-border);
 }
 
 .card p,
 [data-component-name="Card"] p {
   color: var(--stacks-text-muted);
-  font-size: 0.9375rem;
-  line-height: 1.55;
+  font-size: 0.8125rem;
+  line-height: 1.6;
 }
 
-/* Sidebar group labels */
+.card h2,
+[data-component-name="Card"] h2 {
+  font-size: 0.9375rem;
+  margin-top: 0;
+  color: var(--stacks-heading);
+}
+
+/* ── Steps —  -style numbered flow ────────────────────────────── */
+
+[data-component-name="Steps"],
+.steps {
+  margin: 1.5rem 0 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 2.25rem;
+}
+
+[data-component-name="Step"],
+.step {
+  position: relative;
+}
+
+/* Step title — same weight as h3, not oversized */
+[data-component-name="Step"] > div:first-child,
+[data-component-name="Step"] h3,
+.step h3 {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  line-height: 1.45;
+  color: var(--stacks-heading);
+  margin: 0 0 0.625rem;
+}
+
+/* Step body — tighter top margin on first paragraph */
+[data-component-name="Step"] p:first-of-type,
+.step p:first-of-type {
+  margin-top: 0;
+}
+
+[data-component-name="Step"] pre,
+.step pre {
+  margin-top: 0.75rem;
+}
+
+[data-component-name="Step"] .note,
+[data-component-name="Step"] .warning,
+[data-component-name="Step"] .tip,
+[data-component-name="Step"] [data-callout-type] {
+  margin-top: 1rem;
+  margin-bottom: 0;
+}
+
+/* ── Callouts — muted panels, not loud ──────────────────────────────── */
+
+.note,
+.warning,
+.info,
+.tip,
+[data-callout-type] {
+  border-radius: 0.625rem;
+  font-size: 0.875rem;
+  line-height: 1.7;
+  margin: 1.25rem 0;
+  padding: 0.875rem 1rem;
+}
+
+.note,
+.info {
+  background: var(--stacks-code-block-bg);
+  border: 1px solid var(--stacks-code-block-border);
+  color: var(--stacks-text);
+}
+
+.warning {
+  background: var(--stacks-orange-soft);
+  border: 1px solid #fed7c7;
+  color: var(--stacks-text);
+}
+
+.dark .warning,
+html.dark .warning {
+  background: #1a1412;
+  border-color: #3d2a22;
+}
+
+/* ── Sidebar ────────────────────────────────────────────────────────── */
+
+#sidebar #sidebar-content [class*="px-7"] {
+  padding-left: var(--stacks-sidebar-padding-x) !important;
+  padding-right: var(--stacks-sidebar-padding-x) !important;
+}
+
+#sidebar > ul[class*="px-4"] {
+  padding-left: var(--stacks-sidebar-padding-x) !important;
+  padding-right: var(--stacks-sidebar-padding-x) !important;
+}
+
+#sidebar #navigation-items {
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+}
+
+#table-of-contents-layout {
+  padding-left: var(--stacks-sidebar-padding-x) !important;
+  padding-right: var(--stacks-sidebar-padding-x) !important;
+}
+
 nav [class*="group"],
 aside [class*="group"] {
-  letter-spacing: 0.04em;
+  letter-spacing: 0.05em;
   text-transform: uppercase;
-  font-size: 0.75rem;
+  font-size: 0.6875rem;
   font-weight: 600;
+  color: var(--stacks-text-muted);
 }
 
-/* Active nav accent (Stacks orange bar) */
 nav a[data-active="true"],
 aside a[aria-current="page"] {
   color: var(--stacks-orange) !important;
 }
 
-/* Navbar */
+#table-of-contents a {
+  color: var(--stacks-text-muted);
+  font-size: 0.8125rem;
+  line-height: 1.5;
+}
+
+#table-of-contents a[aria-current="true"],
+#table-of-contents a[data-active="true"] {
+  color: var(--stacks-heading);
+}
+
+/* ── Chrome ─────────────────────────────────────────────────────────── */
+
 #navbar {
   border-bottom: 1px solid var(--stacks-border);
 }
 
-/* Footer */
 footer {
   border-top: 1px solid var(--stacks-border);
 }
 
-/* Callouts */
-.note,
-.warning,
-.info {
-  border-radius: 0.75rem;
+/* Horizontal rules — subtle section breaks */
+hr {
+  border: none;
+  border-top: 1px solid var(--stacks-border-subtle);
+  margin: 2rem 0;
+}
+
+/* Frame / screenshots */
+figure,
+.frame {
+  margin: 1.25rem 0 1.75rem;
+  border-radius: 0.625rem;
+  overflow: hidden;
+  border: 1px solid var(--stacks-border);
 }
