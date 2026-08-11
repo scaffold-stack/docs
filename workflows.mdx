@@ -1,0 +1,204 @@
+---
+title: "Workflows"
+description: "Common Scaffold Stacks and stacksdapp workflows — local dev, contract iteration, testnet deploy, CI pipelines, and production mainnet patterns for Stacks dApps."
+keywords: ["Stacks workflow", "stacksdapp workflow", "Scaffold Stacks", "Clarity development", "Stacks CI"]
+---
+
+Recommended paths for new projects, contract iteration, token dApps, CI, and adoption of existing Clarinet repos.
+
+## Contents
+
+- [New project to testnet](#new-project-to-testnet)
+- [Contract iteration loop](#contract-iteration-loop)
+- [Custom frontend with hooks](#custom-frontend-with-hooks)
+- [Add SIP-010 token](#add-sip-010-token)
+- [Add SIP-009 NFT](#add-sip-009-nft)
+- [Adopt existing Clarinet project](#adopt-existing-clarinet-project)
+- [Local devnet](#local-devnet)
+- [Mainnet deploy](#mainnet-deploy)
+- [Upgrade project](#upgrade-project)
+- [CI pipeline](#ci-pipeline)
+- [Clean slate](#clean-slate)
+- [Frontend-only against remote network](#frontend-only-against-remote-network)
+
+## New project to testnet
+
+Recommended first path (no Docker):
+
+```bash
+stacksdapp new my-app && cd my-app
+stacksdapp doctor
+```
+
+1. Fund testnet STX: [Hiro testnet faucet](https://explorer.hiro.so/sandbox/faucet?chain=testnet)
+2. Edit `contracts/settings/Testnet.toml` with deployer mnemonic (local only; never commit)
+3. Edit `contracts/contracts/counter.clar` as needed
+4. `stacksdapp check && stacksdapp generate && stacksdapp test`
+5. `stacksdapp deploy --network testnet --yes`
+6. `stacksdapp dev --network testnet` → http://localhost:3000
+
+Connect Leather or Xverse on testnet. The debug UI calls contract functions.
+
+See also: [Quickstart](/quickstart)
+
+## Contract iteration loop
+
+```bash
+# edit contracts/contracts/*.clar
+stacksdapp check
+stacksdapp generate        # or stacksdapp dev (includes watcher)
+stacksdapp test
+stacksdapp deploy --network testnet --yes
+```
+
+With `stacksdapp dev --network testnet`, run `generate` manually or use `stacksdapp generate --watch` in a second terminal.
+
+## Custom frontend with hooks
+
+End-to-end path when building your own UI (not just the debug panel):
+
+1. **Contracts** — edit `contracts/contracts/*.clar` or `stacksdapp add …`
+2. **Validate** — `stacksdapp check && stacksdapp generate && stacksdapp test`
+3. **Deploy** — `stacksdapp deploy --network testnet --yes` (populates `deployments.json`)
+4. **Custom UI** — create `frontend/src/components/Feature.tsx` with `"use client"`; import hooks from `@/generated/hooks`
+5. **Page** — add component to `app/page.tsx` or a new App Router route
+6. **Run** — `stacksdapp dev --network testnet`; connect wallet for public calls
+
+Full hook patterns, wallet vs devnet signing: [Frontend guide](/frontend)
+
+Keep `<DebugContracts />` during development to compare behavior with your custom components.
+
+## Add SIP-010 token
+
+```bash
+stacksdapp add my-token --template sip010
+```
+
+Customize `contracts/contracts/my-token.clar`, then check → generate → test → deploy.
+
+Trait functions, hooks, and `impl-trait` rules: [SIP standards](/sip-standards)
+
+## Add SIP-009 NFT
+
+```bash
+stacksdapp add my-nft --template sip009
+```
+
+Same workflow. See [SIP standards](/sip-standards) for trait table and hook examples.
+
+## Adopt existing Clarinet project
+
+From a repo with `Clarinet.toml` (standard or nested layout):
+
+```bash
+stacksdapp init
+```
+
+Init will:
+
+- Normalize layout to `contracts/Clarinet.toml` + `contracts/contracts/*.clar`
+- Add frontend template (if missing)
+- Install npm deps, generate bindings, git hooks, agent skill
+- Write `stacksdapp.toml` if missing
+
+Then:
+
+```bash
+stacksdapp deploy --network testnet --yes
+stacksdapp dev --network testnet
+```
+
+Full guide: [Adopt an existing project](/adopt-existing)
+
+## Local devnet
+
+Requires Docker Desktop.
+
+```bash
+stacksdapp doctor
+stacksdapp dev --auto-deploy
+```
+
+- Boots Clarinet devnet + Next.js + file watcher
+- `--auto-deploy` deploys contracts once `:20443` is healthy (recommended)
+- Devnet mnemonics in `settings/Devnet.toml` are public — devnet only
+
+**Deploy separately:**
+
+```bash
+stacksdapp dev                    # terminal 1
+stacksdapp deploy --network devnet --yes   # terminal 2, soon after boot
+```
+
+Guide: [Local devnet](/local-devnet)
+
+## Mainnet deploy
+
+1. Audit contracts and test on testnet first
+2. Set `contracts/settings/Mainnet.toml` mnemonic (never commit)
+3. For SIP tokens: uncomment mainnet `impl-trait` line (see [SIP standards](/sip-standards))
+4. `stacksdapp deploy --network mainnet --dry-run` — review plan and fees
+5. `stacksdapp deploy --network mainnet --yes --wait-confirm`
+6. `stacksdapp dev --network mainnet`
+
+Guide: [Mainnet deployment](/mainnet)
+
+## Upgrade project
+
+```bash
+stacksdapp upgrade
+```
+
+Refreshes npm lockfiles, regenerates bindings, updates git hooks and agent skill. Safe to run after updating the `stacksdapp` CLI.
+
+Guide: [Upgrade a project](/upgrade)
+
+## CI pipeline
+
+```bash
+stacksdapp doctor --strict
+stacksdapp check
+stacksdapp generate
+stacksdapp test
+stacksdapp deploy --network testnet --yes
+```
+
+Use `--json` for machine-readable output. Rely on [exit codes](/cli/commands#exit-codes).
+
+Do not run devnet in CI unless Docker is available and stall risk is acceptable.
+
+## Clean slate
+
+```bash
+stacksdapp clean --force
+```
+
+Removes `.cache/`, devnet state, and generated bindings. Does not delete `.clar` sources.
+
+After clean: `stacksdapp generate` to restore bindings.
+
+## Redeploy / naming collisions
+
+By default, redeploying auto-versions (`counter` → `counter-v2`). To fail instead:
+
+```bash
+stacksdapp deploy --network testnet --no-auto-version --yes
+```
+
+## Frontend-only against remote network
+
+No local chain required:
+
+```bash
+stacksdapp dev --network testnet
+stacksdapp dev --network mainnet
+```
+
+## Subdirectory commands
+
+```bash
+cd frontend
+stacksdapp check    # walks up to project root
+
+stacksdapp --root /path/to/my-app deploy --network testnet --yes
+```
