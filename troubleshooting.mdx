@@ -1,0 +1,199 @@
+---
+title: "Troubleshooting"
+description: "Fix common Scaffold Stacks and stacksdapp errors — exit codes, Clarinet issues, deploy failures, wallet problems, and Stacks dApp debugging."
+keywords: ["Scaffold Stacks troubleshooting", "stacksdapp errors", "Stacks deploy error", "Clarity debug", "stacksdapp doctor"]
+---
+
+Start every investigation with `stacksdapp doctor`. Use `stacksdapp doctor --strict` in CI to fail on warnings.
+
+## Contents
+
+- [Prerequisites](#prerequisites)
+- [Project not found](#project-not-found-exit-2)
+- [Deploy failures](#deploy-failures-exit-8)
+- [Devnet issues](#devnet-issues)
+- [Clarity version mismatch](#clarity-version--epoch-mismatch)
+- [Bindings out of sync](#bindings-out-of-sync)
+- [Check failed](#check-failed-exit-6)
+- [Frontend errors](#frontend-errors)
+- [Tests and generate failed](#tests-failed-exit-7--generate-failed-exit-10)
+- [Init conflicts](#init-conflicts)
+- [Git hook blocked commit](#git-hook-blocked-commit)
+- [Getting help](#getting-help)
+
+## Prerequisites
+
+```bash
+stacksdapp doctor
+stacksdapp doctor --strict   # CI: fail on warnings
+```
+
+| Check fails | Fix |
+| --- | --- |
+| Rust missing/old | Install via [rustup.rs](https://rustup.rs) |
+| Node missing | Install Node 20+ |
+| Clarinet missing/old | `brew install clarinet` — need **3.23+** for Clarity 6 devnet |
+| Docker missing | Install Docker Desktop (devnet only) |
+| Git hooks | `git config core.hooksPath .githooks` or `npm run setup-hooks` |
+
+## Project not found (exit 2)
+
+```
+No scaffold-stacks project found...
+```
+
+- `cd` to a directory containing `stacksdapp.toml` or `contracts/Clarinet.toml`
+- Or: `stacksdapp --root /path/to/project <command>`
+- For raw Clarinet repos: run [`stacksdapp init`](/adopt-existing) first
+
+## Deploy failures (exit 8)
+
+### Testnet / mainnet
+
+| Symptom | Action |
+| --- | --- |
+| Placeholder mnemonic | Replace `<YOUR PRIVATE...>` in `Testnet.toml` or `Mainnet.toml` |
+| Insufficient STX | Fund via [Hiro testnet faucet](https://explorer.hiro.so/sandbox/faucet?chain=testnet) |
+| Interactive prompt hangs | Add `--yes` |
+| Tx in mempool, not confirmed | Normal without `--wait-confirm`; check explorer |
+| Wrong network | Match `--network` to settings file and wallet network |
+
+### Devnet
+
+| Symptom | Action |
+| --- | --- |
+| Deploy never confirms | Chain may be stalled; use `--auto-deploy` or [testnet](/testnet) |
+| Port in use | Stop parallel `clarinet devnet start`; `stacksdapp clean --force` |
+| Epoch burn wait | Expected for C5/C6; wait or use testnet |
+
+## Devnet issues
+
+### Boot stuck
+
+```
+waiting for bitcoin-node / stacks-node...
+```
+
+1. Ensure Docker is running
+2. Stop conflicting containers: `docker ps --filter name=devnet -q | xargs docker stop`
+3. `stacksdapp clean --force`
+4. Retry `stacksdapp dev --auto-deploy`
+5. Do not run manual `clarinet devnet start` alongside `stacksdapp dev`
+
+### Stall after ~block 71
+
+Known issue with long-running local devnet (PoX / signer timeout).
+
+**Workarounds:**
+
+- Deploy early: `stacksdapp dev --auto-deploy`
+- Use [testnet](/testnet) for deploy verification
+- Full reset: `stacksdapp clean --force`, restart Docker, retry
+
+Testnet and mainnet deploy are unaffected. See [Local devnet](/local-devnet).
+
+## Clarity version / epoch mismatch
+
+- C5 requires `epoch = "3.4"` (not `"4.0"`)
+- C6 requires `epoch = "4.0"`
+- Regenerate plans: `cd contracts && clarinet deployments generate --devnet`
+
+Or add with the correct version: `stacksdapp add name --clarity-version 5`
+
+Full mapping: [Clarity versions](/clarity-versions)
+
+## Bindings out of sync
+
+```bash
+stacksdapp generate
+```
+
+Never patch `frontend/src/generated/*` manually. See [Code generation](/code-generation).
+
+## Check failed (exit 6)
+
+Run `stacksdapp check` and fix Clarinet checker errors in `.clar` files.
+
+### `use of undeclared trait <sip-010-trait>`
+
+Explorer or deploy abort when `impl-trait` uses a **short trait name** instead of a full on-chain contract path.
+
+| Bad | Good |
+| --- | --- |
+| `(impl-trait 'sip-010-trait)` | **Testnet:** omit `impl-trait` — use `stacksdapp add --template sip010` |
+| `(impl-trait 'SP3....sip-010-trait)` on testnet | **Mainnet only:** full trait path (see [SIP standards](/sip-standards)) |
+
+**Fix steps:**
+
+1. Run `stacksdapp add NAME --template sip010` (or `sip009`) instead of rewriting from blog snippets
+2. Match `[[project.requirements]]` in `Clarinet.toml` to the target network
+3. `stacksdapp check` → `stacksdapp test` → redeploy
+
+## Frontend errors
+
+### `Cannot convert [object Object] to a BigInt`
+
+Common when formatting SIP-010 balances or other uint read-only results.
+
+**Cause:** Hook `data` from read-only calls uses `cvToValue`, which represents `(ok uint)` as `{ type: "uint", value: "1500000" }` — not a native `bigint`.
+
+**Fix:** Do not `BigInt(hook.data)` directly. Unwrap the cvToJSON shape first. Full helpers and examples: [Frontend guide](/frontend).
+
+### `Failed to fetch` on read-only calls
+
+Browser could not reach the Stacks node — not a contract revert.
+
+| Failed request host | Fix |
+| --- | --- |
+| `localhost:3999` | Run `stacksdapp dev` (Docker), or switch to testnet: `NEXT_PUBLIC_NETWORK=testnet` + restart Next.js |
+| `api.testnet.hiro.so` | Check connectivity; add `NEXT_PUBLIC_HIRO_API_KEY`; disable ad-blocker |
+| Contract deployed but still fails | Verify `deployments.json` has the contract and `ST…` prefix matches testnet |
+
+**Checklist:**
+
+1. `cat frontend/src/generated/deployments.json` — contract entry exists
+2. `grep NEXT_PUBLIC_NETWORK frontend/.env.local` — matches deploy network
+3. After testnet deploy: `stacksdapp dev --network testnet` (not default devnet)
+4. Guard read-only `call()` until wallet address is valid; show `hook.error`
+
+Full patterns: [Frontend guide](/frontend)
+
+## Tests failed (exit 7) / Generate failed (exit 10)
+
+**Tests:**
+
+```bash
+stacksdapp test
+```
+
+Contract tests use simnet — no Docker. See [Testing](/testing).
+
+**Generate:**
+
+- Validate `contracts/Clarinet.toml`
+- Run `npm install` in `contracts/` and `frontend/`
+- `stacksdapp clean --force` then `stacksdapp generate`
+
+## Init conflicts
+
+Merge duplicate `settings/`, `tests/`, or `deployments/` directories before rerunning [`stacksdapp init`](/adopt-existing).
+
+## Git hook blocked commit
+
+The pre-commit hook blocks likely seed phrases in `Testnet.toml` and `Mainnet.toml`. Unstage real mnemonics before committing.
+
+Emergency bypass only:
+
+```bash
+SCAFFOLD_ALLOW_COMMITTED_MNEMONIC=1 git commit
+```
+
+<Warning>
+  Devnet template mnemonics are public — devnet only. Never reuse them on testnet or mainnet.
+</Warning>
+
+## Getting help
+
+- Docs: [scaffoldstacks.mintlify.app](https://scaffoldstacks.mintlify.app/)
+- [Telegram](https://telegram.me/+CBp6wSIiXNhmMjZk)
+- [GitHub](https://github.com/scaffold-stack/scaffold-stack)
