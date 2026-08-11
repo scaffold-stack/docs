@@ -2,11 +2,13 @@
   "$schema": "https://mintlify.com/docs.json",
   "theme": "maple",
   "name": "Scaffold Stacks",
+  "description": "Official docs for Scaffold Stacks — the stacksdapp CLI and Next.js template to build, test, and deploy Clarity smart contract dApps on the Stacks blockchain (Bitcoin L2).",
   "colors": {
     "primary": "#FC6432",
     "light": "#FF8F66",
     "dark": "#D33D00"
   },
+  "css": "/style.css",
   "favicon": "/favicon.svg",
   "fonts": {
     "family": "Inter",
@@ -26,10 +28,11 @@
     }
   },
   "appearance": {
-    "default": "system"
+    "default": "light"
   },
   "search": {
-    "enabled": true
+    "enabled": true,
+    "prompt": "Search Scaffold Stacks docs, stacksdapp CLI, Clarity..."
   },
   "navigation": {
     "tabs": [
@@ -41,7 +44,10 @@
             "pages": [
               "index",
               "prerequisites",
-              "quickstart"
+              "quickstart",
+              "workflows",
+              "project-layout",
+              "ai-agents"
             ]
           },
           {
@@ -56,7 +62,11 @@
             "pages": [
               "development",
               "contracts",
+              "clarity-language",
+              "clarity-versions",
+              "sip-standards",
               "code-generation",
+              "frontend",
               "testing"
             ]
           },
@@ -66,6 +76,12 @@
               "testnet",
               "mainnet",
               "local-devnet"
+            ]
+          },
+          {
+            "group": "Help",
+            "pages": [
+              "troubleshooting"
             ]
           }
         ]
@@ -115,8 +131,26 @@
     ]
   },
   "seo": {
+    "indexing": "navigable",
     "metatags": {
+      "canonical": "https://scaffoldstacks.mintlify.app",
+      "google-site-verification": "7vjOsWnmzZK-Q5u0oiB0d0nEO7PfW0XW08NU64ibe_M",
+      "keywords": "Scaffold Stacks, stacksdapp, stacksdapp CLI, Stacks dApp, Stacks blockchain, Clarity smart contracts, Clarinet, Bitcoin L2, SIP-010, SIP-009, Stacks testnet, Stacks mainnet",
+      "og:site_name": "Scaffold Stacks Documentation",
+      "og:locale": "en_US",
+      "twitter:site": "@sfdstacks",
+      "twitter:card": "summary_large_image",
       "talentapp:project_verification": "13cb3ae97c796bbb005150408fea9b069cb372ca4bb9e80922f3f9e2d114c42ddd3d1eba48b89ae41a9d841ea95db44ef2fc1bf343eefb123eca8ef288e5ec4c"
+    },
+    "organization": {
+      "id": "https://scaffoldstacks.mintlify.app/#organization",
+      "name": "Scaffold Stacks",
+      "url": "https://github.com/scaffold-stack/scaffold-stack",
+      "sameAs": [
+        "https://github.com/scaffold-stack/scaffold-stack",
+        "https://x.com/sfdstacks",
+        "https://telegram.me/+CBp6wSIiXNhmMjZk"
+      ]
     }
   },
   "contextual": {
