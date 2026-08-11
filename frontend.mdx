@@ -1,0 +1,301 @@
+---
+title: "Frontend"
+description: "Scaffold Stacks Next.js frontend — generated React hooks, Leather and Xverse wallet integration, devnet signing, and custom UI patterns for Stacks dApps."
+keywords: ["Stacks frontend", "Stacks.js hooks", "Leather wallet", "Xverse wallet", "Scaffold Stacks React", "stacksdapp dev"]
+---
+
+Next.js 15 + React 18 + Tailwind + Jotai + `@stacks/connect` v8 + `@stacks/transactions` v7.
+
+After `stacksdapp generate` and `stacksdapp deploy`, the frontend calls deployed contracts via **reusable generated hooks**.
+
+## Contents
+
+- [Full-stack checklist](#full-stack-checklist)
+- [Architecture](#architecture)
+- [Generated hooks](#generated-hooks)
+- [deployments.json](#deploymentsjson)
+- [Network config](#network-config)
+- [Signing model](#signing-model)
+- [Using hooks](#using-hooks)
+- [Parsing read-only data](#parsing-read-only-data)
+- [Failed to fetch errors](#failed-to-fetch-errors)
+- [Building Clarity arguments](#building-clarity-arguments)
+- [Wallet integration](#wallet-integration)
+- [Custom UI workflow](#custom-ui-workflow)
+- [Common mistakes](#common-mistakes)
+
+## Full-stack checklist
+
+```
+1. stacksdapp new my-app && cd my-app
+2. Edit contracts/contracts/*.clar  (or stacksdapp add …)
+3. stacksdapp check && stacksdapp generate && stacksdapp test
+4. Set deployer mnemonic in contracts/settings/Testnet.toml
+5. stacksdapp deploy --network testnet --yes   → writes deployments.json
+6. Create frontend/src/components/YourFeature.tsx  ("use client", import hooks)
+7. Add <YourFeature /> to frontend/src/app/page.tsx
+8. stacksdapp dev --network testnet   # MUST match deploy network
+9. Connect wallet (testnet/mainnet) → call public functions
+```
+
+Keep `<DebugContracts />` on the home page while building. It validates hooks work before you ship custom UI.
+
+## Architecture
+
+```
+contracts/*.clar
+    ↓ stacksdapp generate
+frontend/src/generated/
+    contracts.ts      ← low-level call functions
+    hooks.ts          ← React hooks wrapping contracts.ts
+    DebugContracts.tsx← debug UI (uses hooks)
+    deployments.json  ← on-chain addresses (written by deploy)
+         ↓
+frontend/src/components/   ← your custom UI (edit here)
+frontend/src/app/          ← Next.js pages
+frontend/src/lib/devnet.ts ← devnet burner signing
+frontend/src/scaffold.config.ts ← network config
+```
+
+**Rule:** Never edit `generated/*`. Build custom UI in `components/` and import from `@/generated/hooks`.
+
+## Generated hooks
+
+Each public/read-only function gets one hook in `frontend/src/generated/hooks.ts`:
+
+| Contract | Function | Hook |
+| --- | --- | --- |
+| `counter` | `increment` | `useCounter_Increment` |
+| `my-token` | `transfer` | `useMyToken_Transfer` |
+
+Naming: `use` + `{ContractPascalCase}` + `_` + `{FunctionPascalCase}`.
+
+```tsx
+"use client";
+import { useCounter_Increment } from '@/generated/hooks';
+
+function MyButton() {
+  const { call, data, loading, error, txid, txStatus } = useCounter_Increment();
+
+  return (
+    <button disabled={loading} onClick={() => call([])}>
+      {loading ? '…' : 'Increment'}
+    </button>
+  );
+}
+```
+
+### Hook return values
+
+| Field | Meaning |
+| --- | --- |
+| `call(args)` | Invoke the contract function |
+| `data` | Last result |
+| `loading` | In-flight |
+| `error` | Thrown error |
+| `txid` | Public calls only — broadcast tx id |
+| `txStatus` | `pending` \| `success` \| `abort_by_response` \| `error` |
+| `explorerUrl` | Hiro explorer link for `txid` |
+
+## deployments.json
+
+Contract calls resolve addresses from `frontend/src/generated/deployments.json`:
+
+```json
+{ "contracts": { "counter": { "contract_id": "ST....counter" } } }
+```
+
+- Written by `stacksdapp deploy`
+- If missing, calls log a warning and return `undefined`
+- After redeploy with auto-versioning (`counter-v2`), run `stacksdapp generate` if bindings drift
+
+## Network config
+
+Driven by `frontend/.env.local`:
+
+```bash
+NEXT_PUBLIC_NETWORK=devnet   # devnet | testnet | mainnet
+# NEXT_PUBLIC_STACKS_NODE_URL=...   # optional override
+# NEXT_PUBLIC_HIRO_API_KEY=...      # optional Hiro API key for read calls
+```
+
+`stacksdapp dev --network testnet` updates `.env.local` automatically.
+
+Import `scaffoldConfig` from `@/scaffold.config` for `network`, `nodeUrl`, `isDevnet`, `isTestnet`, and `getReadOnlyNetwork()`.
+
+## Signing model
+
+| Network | Public (write) calls | Read-only calls |
+| --- | --- | --- |
+| **devnet** | `lib/devnet.ts` — public burner keys, no wallet popup | RPC via local node |
+| **testnet/mainnet** | `@stacks/connect` wallet popup | RPC via Hiro |
+
+**Do not** expect Leather/Xverse to sign devnet writes. Devnet uses template burner mnemonics from `contracts/settings/Devnet.toml`.
+
+<Warning>
+  Never reuse devnet burner mnemonics on testnet or mainnet.
+</Warning>
+
+## Using hooks
+
+Read-only hooks resolve on `call()` — no txid polling. Public hooks poll the node until success or abort.
+
+```tsx
+"use client";
+import { useEffect } from 'react';
+import { useCounter_GetCount } from '@/generated/hooks';
+
+export function CounterDisplay() {
+  const { call, data, loading } = useCounter_GetCount();
+
+  useEffect(() => { void call([]); }, [call]);
+
+  if (loading) return <p>Loading…</p>;
+  return <p>Count: {JSON.stringify(data)}</p>;
+}
+```
+
+SIP-010 / SIP-009 hooks follow the same pattern. See [SIP standards](/sip-standards).
+
+## Parsing read-only data
+
+Read-only hooks return **cvToValue output**, not plain JavaScript numbers. SIP-010 `get-balance` typically returns:
+
+```ts
+{ type: "uint", value: "1500000" }
+```
+
+**Wrong** (throws `Cannot convert [object Object] to a BigInt`):
+
+```tsx
+BigInt(hook.data)
+```
+
+**Right** — unwrap first:
+
+```tsx
+function clarityUintToBigInt(raw: unknown): bigint | null {
+  if (raw === null || raw === undefined) return null;
+  if (typeof raw === "bigint") return raw;
+  if (typeof raw === "string" && raw !== "") return BigInt(raw);
+  if (typeof raw === "object") {
+    const obj = raw as { type?: string; value?: unknown };
+    if (obj.type === "uint" || obj.type === "int") return BigInt(String(obj.value));
+    if ("value" in obj && obj.value != null) return clarityUintToBigInt(obj.value);
+  }
+  return null;
+}
+
+function formatTokenAmount(raw: unknown, decimals = 6): string {
+  const value = clarityUintToBigInt(raw);
+  if (value === null) return "—";
+  const whole = value / BigInt(10 ** decimals);
+  const fraction = value % BigInt(10 ** decimals);
+  const fractionStr = fraction.toString().padStart(decimals, "0").replace(/0+$/, "");
+  return fractionStr ? `${whole}.${fractionStr}` : String(whole);
+}
+```
+
+SIP-010 amounts are **base units**. Divide by `10**decimals` for human display.
+
+## Failed to fetch errors
+
+`TypeError: Failed to fetch` on read-only calls means the HTTP request to the node failed — not a Clarity revert.
+
+| Cause | Fix |
+| --- | --- |
+| Network env mismatch | Set `NEXT_PUBLIC_NETWORK=testnet` after testnet deploy; restart Next.js |
+| Devnet node down | Run `stacksdapp dev` (Docker). Do not use `npm run dev` alone on devnet |
+| Contract not deployed | Check `deployments.json`; run `stacksdapp deploy --network testnet --yes` |
+| Invalid principal arg | Guard: only call when wallet address is valid `ST…` / `SP…` |
+| Hiro rate limit | Add `NEXT_PUBLIC_HIRO_API_KEY` in `.env.local` |
+
+**Agent rule:** After `stacksdapp deploy --network testnet`, run `stacksdapp dev --network testnet` (not bare `stacksdapp dev` which defaults to devnet).
+
+Pre-flight:
+
+```bash
+cat frontend/src/generated/deployments.json
+grep NEXT_PUBLIC_NETWORK frontend/.env.local
+```
+
+More fixes: [Troubleshooting](/troubleshooting)
+
+## Building Clarity arguments
+
+Use `Cl` from `@stacks/transactions`:
+
+| Clarity type | TypeScript |
+| --- | --- |
+| `uint` | `Cl.uint(n)` |
+| `int` | `Cl.int(n)` |
+| `bool` | `Cl.bool(true)` |
+| `principal` | `Cl.principal('ST…')` |
+| `(string-ascii …)` | `Cl.stringAscii('hello')` |
+| `(optional …)` | `Cl.none()` or `Cl.some(Cl.uint(1))` |
+| `(tuple …)` | `Cl.tuple({ 'field-a': Cl.uint(1) })` |
+| `(list …)` | `Cl.list([Cl.uint(1), Cl.uint(2)])` |
+
+Check the generated debug UI or contract ABI for exact field names.
+
+## Wallet integration
+
+```
+app/layout.tsx
+  └── WalletProvider          # syncs @stacks/connect → Jotai
+        ├── Header            # WalletConnect + NetworkBadge
+        └── page content
+
+store/wallet.ts
+  addressAtom                 # persisted STX address
+```
+
+```tsx
+"use client";
+import { useAtomValue } from 'jotai';
+import { addressAtom } from '@/store/wallet';
+
+export function MyPanel() {
+  const address = useAtomValue(addressAtom);
+  if (!address) return <p>Connect wallet to continue</p>;
+  return <p>Signed in as {address}</p>;
+}
+```
+
+User must connect Leather or Xverse on **testnet/mainnet** before public calls from custom UI.
+
+## Custom UI workflow
+
+1. Edit contracts → `stacksdapp check && stacksdapp generate && stacksdapp test`
+2. Deploy → `stacksdapp deploy --network testnet --yes`
+3. Create component in `frontend/src/components/` with `"use client"` and hook imports
+4. Add to `app/page.tsx` or a new route
+5. Run `stacksdapp dev --network testnet`
+
+For direct (non-hook) calls in scripts:
+
+```ts
+import { counter_increment } from '@/generated/contracts';
+await counter_increment([]);
+```
+
+Prefer hooks in React components for loading/error/tx state.
+
+## Common mistakes
+
+| Mistake | Fix |
+| --- | --- |
+| Edit `generated/hooks.ts` | Run `stacksdapp generate` |
+| Expect wallet popup on devnet | Devnet uses burners in `lib/devnet.ts` |
+| Call contract before deploy | Deploy first; check `deployments.json` |
+| Wrong network in wallet vs app | Match wallet network to `NEXT_PUBLIC_NETWORK` |
+| Skip `"use client"` in hook components | Hooks require client components |
+| `BigInt(hook.data)` on read-only uint | Unwrap cvToJSON shape first |
+| `stacksdapp dev` after testnet deploy | Use `stacksdapp dev --network testnet` |
+| `npm run dev` alone on devnet | Needs `stacksdapp dev` for local node at `localhost:3999` |
+
+## Live reload
+
+- **`stacksdapp dev`** (devnet): file watcher regenerates bindings on `.clar` changes
+- **`stacksdapp dev --network testnet`**: run `stacksdapp generate --watch` in a second terminal
+- After regenerate, refresh hook imports in your components
