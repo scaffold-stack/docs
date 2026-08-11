@@ -1,6 +1,7 @@
 ---
 title: "Local devnet"
-description: "Run a full Stacks blockchain locally with optional auto-deploy"
+description: "Run a local Stacks blockchain with Docker and stacksdapp dev — optional auto-deploy for fast Clarity smart contract iteration without testnet fees."
+keywords: ["Stacks devnet", "Stacks local development", "stacksdapp dev", "Clarinet devnet", "Docker Stacks", "Scaffold Stacks"]
 ---
 
 Run a complete Bitcoin and Stacks development environment locally with Docker.
@@ -21,7 +22,7 @@ Run a complete Bitcoin and Stacks development environment locally with Docker.
 | Requirement | Notes |
 | --- | --- |
 | Docker Desktop | Installed and running |
-| Clarinet | 3.21+ |
+| Clarinet | 3.23+ (required for Clarity 6 / epoch 4.0 devnet) |
 | RAM | 8 GB+ recommended |
 
 Verify with:
@@ -50,6 +51,10 @@ Deploy contracts in a second terminal once the node is ready (~30s):
 stacksdapp deploy --network devnet
 ```
 
+<Warning>
+  Do not run `clarinet devnet start` alongside `stacksdapp dev`. They conflict on ports.
+</Warning>
+
 ## Auto-deploy
 
 Deploy once the local chain is healthy. No second terminal required.
@@ -58,7 +63,13 @@ Deploy once the local chain is healthy. No second terminal required.
 stacksdapp dev --auto-deploy
 ```
 
-The supervisor waits for the devnet node, then runs deploy automatically.
+The supervisor waits for the devnet node, then runs deploy automatically. Recommended for reliable local deploy verification.
+
+Preserve devnet cache between runs:
+
+```bash
+stacksdapp dev --keep-state
+```
 
 ## Pre-funded accounts
 
@@ -67,15 +78,17 @@ Devnet includes pre-funded accounts in `contracts/settings/Devnet.toml`:
 ```toml
 [accounts.deployer]
 mnemonic = "twice kind fence tip hidden tilt action fragile skin nothing glory cousin green tomorrow spring wrist shed math olympic multiply hip blue scout claw"
-balance = 100000000000000
+balance = 100_000_000_000_000
 
 [accounts.wallet_1]
-mnemonic = "sell invite acquire kitten bamboo drastic jelly vivid peace spawn twice guilt pave pen praise pork crisp unite giggle laundry steel scout cycle marry"
-balance = 100000000000000
+mnemonic = "sell invite acquire kitten bamboo drastic jelly vivid peace spawn twice guilt pave pen trash pretty park cube fragile unaware remain midnight betray rebuild"
+balance = 100_000_000_000_000
 ```
 
+The devnet settings also include **PoX stacking orders** required for the epoch 4.0 snapshot. Do not remove them or override epoch heights.
+
 <Warning>
-  These are public burner mnemonics for local use only. The CLI prints a safety warning. Never reuse them on testnet or mainnet, and never commit real deployer seeds.
+  These are public burner mnemonics for local use only. The settings file includes a CLI warning. Never reuse them on testnet or mainnet, and never commit real deployer seeds.
 </Warning>
 
 No real STX or external wallet is required for basic debug UI flows on devnet.
@@ -87,13 +100,23 @@ No real STX or external wallet is required for basic debug UI flows on devnet.
 - Deploy with `--auto-deploy` or `stacksdapp deploy --network devnet`.
 - Test with pre-funded accounts.
 
+After contract changes on devnet, set `NEXT_PUBLIC_NETWORK=devnet` in `frontend/.env.local`. If you deployed to testnet instead, use `stacksdapp dev --network testnet`.
+
 ## Stop devnet
 
 ```bash
 stacksdapp clean
+stacksdapp clean --force    # skip confirmation
 ```
 
 Stops services and removes generated and devnet state.
+
+If devnet boot stalls:
+
+1. Ensure Docker is running
+2. Stop conflicting containers: `docker ps --filter name=devnet -q | xargs docker stop`
+3. `stacksdapp clean --force`
+4. Retry `stacksdapp dev --auto-deploy`
 
 ## When to use devnet
 
@@ -102,8 +125,12 @@ Stops services and removes generated and devnet state.
 - Offline development
 - Full stack simulation
 
+For deploy verification, **testnet is more reliable** than long-running local devnet.
+
 ## Limitations
 
 - Slower than testnet (Docker overhead)
 - No real economic incentives
 - Limited to local machine
+- Long idle devnet sessions can stall around Stacks block ~71 (PoX / signer timeout). Prefer `--auto-deploy` or use testnet for deploy verification
+- Devnet `bitcoin_controller_block_time` is set to 45s to allow Nakamoto signer time through PoX reward-cycle transitions
