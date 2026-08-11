@@ -1,20 +1,14 @@
 ---
 title: "Prerequisites"
-description: "Set up your development environment for Scaffold Stacks"
+description: "Install Rust, Node.js, Clarinet 3.23+, and a Stacks wallet before using stacksdapp and Scaffold Stacks to build Clarity smart contract dApps."
+keywords: ["Stacks prerequisites", "Clarinet install", "stacksdapp install", "Scaffold Stacks setup", "Stacks development environment"]
 ---
 
 Install the tools below before using Scaffold Stacks. All versions listed are minimums.
 
-## Contents
-
-- [Requirements](#requirements)
-- [Install the CLI](#install-the-cli)
-- [Verify installation](#verify-installation)
-- [Rust](#rust)
-- [Node.js](#nodejs)
-- [Clarinet](#clarinet)
-- [Stacks wallet](#stacks-wallet)
-- [Docker (optional)](#docker-optional)
+<Tip>
+  Run `stacksdapp doctor` after installing the CLI — it checks Rust, Node, Clarinet 3.23+, Docker, and git in one pass.
+</Tip>
 
 ## Requirements
 
@@ -22,7 +16,7 @@ Install the tools below before using Scaffold Stacks. All versions listed are mi
 | --- | --- | --- |
 | Rust | 1.75+ | Building and installing the CLI |
 | Node.js | 20+ | Frontend and contract tests |
-| Clarinet | 3.21+ | Contract toolchain |
+| Clarinet | 3.23+ | Contract toolchain and Clarity 6 devnet |
 | Leather or Xverse | latest | Testnet and mainnet wallet flows |
 | Docker Desktop | latest | Local devnet only |
 
@@ -47,7 +41,13 @@ cargo install --path cli
 stacksdapp doctor
 ```
 
-Checks Rust, Node.js, Clarinet 3.21+, Docker (for devnet), and git.
+Checks Rust, Node.js, Clarinet 3.23+, Docker (for devnet), git, and git hooks path.
+
+For CI pipelines, use strict mode to fail on warnings:
+
+```bash
+stacksdapp doctor --strict
+```
 
 To verify manually:
 
@@ -88,7 +88,7 @@ npm --version
 
 ## Clarinet
 
-Scaffold Stacks templates target Clarinet SDK 3.21.
+Scaffold Stacks templates target Clarinet SDK 3.23+ and default to **Clarity 6** (epoch 4.0).
 
 ```bash
 # macOS with Homebrew
@@ -105,6 +105,8 @@ Verify:
 ```bash
 clarinet --version
 ```
+
+Clarinet 3.23+ is required for Clarity 6 devnet. Testnet and mainnet deploy work with earlier 3.21+ releases, but `stacksdapp doctor` expects 3.23+.
 
 ## Stacks wallet
 
