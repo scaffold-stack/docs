@@ -1,22 +1,17 @@
 ---
 title: "Quickstart"
-description: "Deploy your first Stacks dApp to testnet in 5 steps"
+description: "Deploy your first Stacks dApp to testnet in 5 steps with stacksdapp — install the CLI, scaffold a project, fund testnet STX, deploy Clarity contracts, and run the Next.js frontend."
+keywords: ["Stacks quickstart", "stacksdapp", "Stacks testnet", "deploy Clarity", "Scaffold Stacks", "build Stacks dApp"]
 ---
 
-Deploy your first Stacks dApp to testnet in minutes. No Docker required. Contracts run on Hiro testnet infrastructure.
+Deploy your first Stacks dApp to testnet in minutes. No Docker required.
 
-## Contents
+<Tip>
+  Requires Clarinet **3.23+**. Verify with `stacksdapp doctor` before you start.
+</Tip>
 
-- [Install the CLI](#install-the-cli)
-- [Scaffold a project](#scaffold-a-project)
-- [Get testnet STX](#get-testnet-stx)
-- [Deploy to testnet](#deploy-to-testnet)
-- [Start the frontend](#start-the-frontend)
-- [Connect your wallet](#connect-your-wallet)
-
-## Install the CLI
-
-Requires Clarinet **3.21+**.
+<Steps>
+<Step title="Install the CLI">
 
 ```bash
 cargo install stacksdapp
@@ -32,20 +27,22 @@ cd scaffold-stack
 cargo install --path cli
 ```
 
-## Scaffold a project
+</Step>
+
+<Step title="Scaffold a project">
 
 ```bash
 stacksdapp new my-app
 cd my-app
 ```
 
-This creates:
+This creates a counter contract (Clarity 6), Next.js frontend, network settings, `stacksdapp.toml`, and a bundled agent skill.
 
-- Clarinet configuration for contracts
-- Next.js frontend with wallet integration
-- Network settings for testnet, mainnet, and devnet
+Skip git init with `stacksdapp new my-app --no-git`.
 
-## Get testnet STX
+</Step>
+
+<Step title="Get testnet STX">
 
 1. Open the [Hiro testnet faucet](https://explorer.hiro.so/sandbox/faucet?chain=testnet)
 2. Add your deployer mnemonic to `contracts/settings/Testnet.toml`:
@@ -55,27 +52,30 @@ This creates:
 mnemonic = "your 24 words here"
 ```
 
-## Deploy to testnet
+<Warning>
+  Never commit real mnemonics. The pre-commit hook blocks likely seed phrases in Testnet.toml and Mainnet.toml.
+</Warning>
+
+</Step>
+
+<Step title="Deploy to testnet">
 
 ```bash
-stacksdapp deploy --network testnet
+stacksdapp check && stacksdapp generate && stacksdapp test
+stacksdapp deploy --network testnet --yes
 ```
 
-Preview without broadcasting:
+Preview fees without broadcasting:
 
 ```bash
 stacksdapp deploy --network testnet --dry-run
 ```
 
-Deploy a single contract:
+Addresses are written to `frontend/src/generated/deployments.json`.
 
-```bash
-stacksdapp deploy --network testnet --contract counter
-```
+</Step>
 
-This generates a deployment plan, submits transactions, and writes addresses to `frontend/src/generated/deployments.json`.
-
-## Start the frontend
+<Step title="Start the frontend">
 
 ```bash
 stacksdapp dev --network testnet
@@ -83,12 +83,10 @@ stacksdapp dev --network testnet
 
 Opens [http://localhost:3000](http://localhost:3000). The Debug Contracts panel lists every contract function with typed inputs.
 
-## Connect your wallet
+Connect Leather or Xverse set to Testnet. Public functions open a wallet popup; read-only functions call the node directly.
 
-Click **Connect Wallet** and connect Leather or Xverse set to Testnet.
-
-- Public functions open a wallet popup to sign and broadcast
-- Read-only functions call the node directly (no wallet needed)
+</Step>
+</Steps>
 
 <Note>
   You now have a live Stacks dApp on testnet. Use the debug UI to interact with your contracts.
