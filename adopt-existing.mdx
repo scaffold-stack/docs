@@ -1,9 +1,10 @@
 ---
 title: "Adopt an existing project"
-description: "Bring an existing Clarinet repo onto Scaffold Stacks with stacksdapp init"
+description: "Migrate an existing Clarinet repo to Scaffold Stacks with stacksdapp init — add TypeScript bindings, frontend hooks, and deploy tooling without starting from scratch."
+keywords: ["Clarinet migration", "stacksdapp init", "Scaffold Stacks adopt", "existing Stacks project"]
 ---
 
-Run `stacksdapp init` from the repository root to add the Scaffold Stacks frontend, TypeScript bindings, and debug UI to an existing Clarinet project.
+Run `stacksdapp init` from the repository root to add the Scaffold Stacks frontend, TypeScript bindings, debug UI, git hooks, and agent skill to an existing Clarinet project.
 
 ## Contents
 
@@ -17,7 +18,7 @@ Run `stacksdapp init` from the repository root to add the Scaffold Stacks fronte
 
 ## Requirements
 
-- Clarinet **3.21+**
+- Clarinet **3.23+** (for Clarity 6 devnet support)
 - Run from the repo root where Clarinet lives today
 
 Verify with:
@@ -30,8 +31,11 @@ stacksdapp doctor
 
 1. Normalizes layout to `contracts/Clarinet.toml` and `frontend/` when needed
 2. Adds missing frontend template files
-3. Runs `npm install` in `frontend/` and `contracts/`
-4. Runs `stacksdapp generate`
+3. Writes `stacksdapp.toml` if missing
+4. Installs git pre-commit hook (mnemonic guard)
+5. Installs bundled AI agent skill (`.cursor/skills/scaffold-stacks/`, `AGENTS.md`)
+6. Runs `npm install` in `frontend/` and `contracts/`
+7. Runs `stacksdapp generate`
 
 <Note>
   If `frontend/` already exists but `frontend/scripts/export-abi.mjs` is missing, `init` exits with an error. Add that script, or move `frontend/` temporarily, then run `init` again.
@@ -64,6 +68,9 @@ stacksdapp init
 
 ```text
 my-dapp/
+├── stacksdapp.toml
+├── AGENTS.md
+├── .githooks/pre-commit
 ├── contracts/
 │   ├── Clarinet.toml       # moved from repo root
 │   ├── contracts/
@@ -83,6 +90,7 @@ Entries like `path = "contracts/token.clar"` in `Clarinet.toml` still resolve. T
 
 ```text
 my-dapp/
+├── stacksdapp.toml
 ├── contracts/
 │   └── Clarinet.toml
 ├── frontend/
@@ -112,18 +120,24 @@ Merge or remove one set, then rerun.
 | Command | Use case |
 | --- | --- |
 | `stacksdapp init` | First time bringing an existing Clarinet project onto Scaffold Stacks |
-| [`stacksdapp upgrade`](/upgrade) | Already scaffolded; refresh deps and regenerate bindings |
+| [`stacksdapp upgrade`](/upgrade) | Already scaffolded; refresh deps, bindings, hooks, and agent skill |
 
 ## Next steps
 
 ```bash
 stacksdapp check
 stacksdapp test
-stacksdapp deploy --network testnet
+stacksdapp deploy --network testnet --yes
 ```
 
 For local development with auto-deploy:
 
 ```bash
 stacksdapp dev --auto-deploy
+```
+
+After cloning, enable git hooks:
+
+```bash
+npm run setup-hooks
 ```
