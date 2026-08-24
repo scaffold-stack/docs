@@ -534,3 +534,14 @@ figure,
   overflow: hidden;
   border: 1px solid var(--stacks-border);
 }
+
+/* YouTube embeds — 16:9, playable in-page */
+iframe[src*="youtube.com/embed"],
+iframe[src*="youtube-nocookie.com/embed"] {
+  display: block;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  height: auto;
+  min-height: 315px;
+  border: 0;
+}
