@@ -1,0 +1,128 @@
+---
+title: "Example dApps"
+description: "Forkable Scaffold Stacks reference dApps — DropClaim SIP-010 airdrop and StackVote on-chain governance, already deployed on Stacks testnet."
+keywords: ["Scaffold Stacks examples", "DropClaim", "StackVote", "Stacks airdrop", "Stacks voting", "reference dApp", "stacksdapp"]
+---
+
+Official forkable reference dApps live in [github.com/scaffold-stack/Examples](https://github.com/scaffold-stack/Examples). Each one is a complete Stacks project: Clarity contract, tests, generated React hooks, custom Next.js UI, and a live **testnet** deployment.
+
+Start here if you want to run a real app before `stacksdapp new`, or to copy a custom frontend pattern.
+
+<Tip>
+  Run `stacksdapp` **inside** an example folder (`airdrop_product/` or `votingapp/`), not from the repo root.
+</Tip>
+
+## Examples
+
+| App | Directory | What it does |
+| --- | --- | --- |
+| **DropClaim** | [`airdrop_product/`](https://github.com/scaffold-stack/Examples/tree/main/airdrop_product) | SIP-010 token airdrop — claim, mint, transfer |
+| **StackVote** | [`votingapp/`](https://github.com/scaffold-stack/Examples/tree/main/votingapp) | On-chain governance — create proposals, vote yes/no |
+
+## Run on testnet
+
+Contracts are already deployed. You do not need to deploy to try the UI.
+
+```bash
+git clone https://github.com/scaffold-stack/Examples.git
+cd Examples
+stacksdapp doctor
+```
+
+<Steps>
+<Step title="Start an example">
+
+```bash
+# DropClaim
+cd airdrop_product && stacksdapp dev --network testnet
+
+# or StackVote
+cd votingapp && stacksdapp dev --network testnet
+```
+
+</Step>
+
+<Step title="Connect a wallet">
+
+Open [http://localhost:3000](http://localhost:3000). Install [Leather](https://leather.io/) or [Xverse](https://www.xverse.app/), switch to **Testnet**, fund STX from the [Hiro faucet](https://explorer.hiro.so/sandbox/faucet?chain=testnet), then click **Connect**.
+
+</Step>
+</Steps>
+
+To customize and deploy under your own address, [fork the repo](https://github.com/scaffold-stack/Examples/fork) first.
+
+## DropClaim
+
+SIP-010 **DROP** token (6 decimals). One-time claim of **1,000 DROP** per wallet.
+
+| Item | Value |
+| --- | --- |
+| Contract | `ST3XHHZ1CXVCNYXK3FQ1FDGJ9NK6YBJBJK3FVY5KQ.airdrop-token-v2` |
+| Deploy tx | [Hiro explorer](https://explorer.hiro.so/txid/10a9fb2ac17f8e97606837ca153bc92674f53f87a3a230540b596cb5417107cd?chain=testnet) |
+| Source | `contracts/contracts/airdrop-token-v2.clar` |
+| Custom UI | `frontend/src/components/AirdropApp.tsx` |
+
+| Function | Access | Hook |
+| --- | --- | --- |
+| `claim` | public | `useAirdropTokenV2_Claim` |
+| `mint` | public | `useAirdropTokenV2_Mint` |
+| `transfer` | public | `useAirdropTokenV2_Transfer` |
+| `has-claimed` | read-only | `useAirdropTokenV2_HasClaimed` |
+| `get-balance` | read-only | `useAirdropTokenV2_GetBalance` |
+
+In the UI: claim airdrop, mint extra tokens, transfer DROP.
+
+Trait rules for mainnet listing: [SIP standards](/sip-standards). Full notes: [airdrop.md](https://github.com/scaffold-stack/Examples/blob/main/docs/examples/airdrop.md).
+
+## StackVote
+
+On-chain proposals with a yes/no vote. One vote per wallet per proposal.
+
+| Item | Value |
+| --- | --- |
+| Contract | `ST3XHHZ1CXVCNYXK3FQ1FDGJ9NK6YBJBJK3FVY5KQ.voting-v3` |
+| Deploy tx | [Hiro explorer](https://explorer.hiro.so/txid/462fd7a819542333d51380569697545fc478f8835c4a3ef77e2b94987067cbd2?chain=testnet) |
+| Source | `contracts/contracts/voting-v3.clar` |
+| Custom UI | `frontend/src/components/VotingApp.tsx` |
+
+| Function | Access | Hook |
+| --- | --- | --- |
+| `create-proposal` | public | `useVotingV3_CreateProposal` |
+| `vote` | public | `useVotingV3_Vote` |
+| `get-proposal` | read-only | `useVotingV3_GetProposal` |
+| `get-proposal-count` | read-only | `useVotingV3_GetProposalCount` |
+| `has-voted` | read-only | `useVotingV3_HasVoted` |
+
+In the UI: create a proposal, vote yes or no, refresh tallies.
+
+Full notes: [voting.md](https://github.com/scaffold-stack/Examples/blob/main/docs/examples/voting.md).
+
+## Edit and redeploy
+
+From inside the example directory:
+
+```bash
+# edit contracts/contracts/*.clar
+stacksdapp check && stacksdapp generate && stacksdapp test
+```
+
+Set a **testnet-only** mnemonic in `contracts/settings/Testnet.toml` (never commit it), then:
+
+```bash
+stacksdapp deploy --network testnet --yes
+stacksdapp dev --network testnet
+```
+
+If you bump the contract name (for example `voting-v3` → `voting-v4`), update hook imports in the custom UI component.
+
+Deployment details: [DEPLOYMENT.md](https://github.com/scaffold-stack/Examples/blob/main/docs/DEPLOYMENT.md).
+
+## Related
+
+| Goal | Guide |
+| --- | --- |
+| New project from scratch | [Quickstart](/quickstart) |
+| Donation jar video | [Video tutorial](/video-tutorial) |
+| SIP-010 / SIP-009 templates | [SIP standards](/sip-standards) |
+| Custom hooks and wallet | [Frontend](/frontend) |
+| Example repo docs | [QUICKSTART.md](https://github.com/scaffold-stack/Examples/blob/main/docs/QUICKSTART.md) |
