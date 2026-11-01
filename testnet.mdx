@@ -114,4 +114,4 @@ The CLI handles versioning automatically unless you pass `--no-auto-version`.
 - Verify network configuration in `.env.local` (`NEXT_PUBLIC_NETWORK=testnet`)
 - Check browser console for errors
 - Ensure wallet is set to testnet
-- Do not run `stacksdapp dev` (devnet) when contracts were deployed to testnet
+- After a testnet deploy, open the UI with `stacksdapp dev --network testnet`. Bare `stacksdapp dev` starts the local chain and does not serve the testnet app

@@ -35,7 +35,7 @@ Update bindings:
 stacksdapp generate
 ```
 
-Or let `stacksdapp dev` / `stacksdapp generate --watch` handle it.
+Or run `stacksdapp generate --watch` while you edit. `stacksdapp dev` does not regenerate bindings.
 
 Redeploy to apply on-chain changes:
 
@@ -81,7 +81,7 @@ stacksdapp deploy --network testnet --yes
 # counter-v2, counter-v3, ...
 ```
 
-The CLI handles versioning automatically unless you pass `--no-auto-version`.
+The CLI handles versioning automatically on devnet, testnet, and mainnet unless you pass `--no-auto-version`. On devnet, a contract can still be on chain after you restart `stacksdapp dev`.
 
 ## Project structure
 
@@ -164,7 +164,9 @@ Jotai atoms sync wallet and network state across the template.
 ## Local development
 
 ```bash
-stacksdapp dev --auto-deploy
+stacksdapp dev                         # terminal 1 — Clarinet chain
+stacksdapp deploy --network devnet     # terminal 2
+stacksdapp dev --network devnet        # terminal 3 — Next.js
 ```
 
-See [Local devnet](/local-devnet) for manual deploy, PoX settings, and devnet caveats.
+See [Local devnet](/local-devnet) for Choose Wallet, redeploy, and Clarinet version behavior.

@@ -74,11 +74,10 @@ stacksdapp completions bash    # shell completions
 | `stacksdapp generate --watch` | Regenerate on `.clar` changes |
 | `stacksdapp test` | Contract and frontend tests ([guide](/testing)) |
 | `stacksdapp check` | Type-check Clarity contracts |
-| `stacksdapp clean` | Remove generated files and devnet state |
+| `stacksdapp clean` | Reset a running devnet to the snapshot and wait until Stacks is mining. Does not stop the process |
 | `stacksdapp clean --force` | Skip confirmation prompt |
-| `stacksdapp dev` | Local devnet + frontend + watcher ([guide](/local-devnet)) |
-| `stacksdapp dev --auto-deploy` | Devnet and deploy once the chain is ready |
-| `stacksdapp dev --keep-state` | Devnet: preserve cache between runs |
+| `stacksdapp dev` | Clarinet devnet in this terminal ([guide](/local-devnet)) |
+| `stacksdapp dev --network devnet` | Next.js against that local chain |
 | `stacksdapp dev --network testnet` | Frontend against testnet |
 | `stacksdapp dev --network mainnet` | Frontend against mainnet |
 | `stacksdapp deploy --network <net>` | Deploy contracts (`devnet`, `testnet`, `mainnet`) |
@@ -86,7 +85,7 @@ stacksdapp completions bash    # shell completions
 | `stacksdapp deploy --network testnet --dry-run` | Plan and fee estimate, no broadcast |
 | `stacksdapp deploy --network testnet --yes` | Non-interactive deploy (required for CI) |
 | `stacksdapp deploy --network testnet --wait-confirm` | Poll until on-chain confirmation |
-| `stacksdapp deploy --network testnet --no-auto-version` | Fail on name collision instead of auto-versioning |
+| `stacksdapp deploy --no-auto-version` | Fail on name collision instead of auto-versioning |
 
 ## new
 
@@ -116,14 +115,15 @@ Creates `contracts/contracts/<name>.clar`, updates `Clarinet.toml`, adds trait r
 ## dev
 
 ```bash
-stacksdapp dev                         # local Docker devnet
-stacksdapp dev --auto-deploy           # deploy when chain is healthy
-stacksdapp dev --keep-state            # preserve devnet cache
+stacksdapp dev                         # Clarinet devnet in this terminal
+stacksdapp dev --network devnet        # Next.js only; chain already running
 stacksdapp dev --network testnet
 stacksdapp dev --network mainnet
 ```
 
-Default with no `--network` starts local devnet (Docker required). Do not run `clarinet devnet start` alongside `stacksdapp dev`.
+With no `--network`, this terminal is the chain (Docker required). It does not start Next.js or deploy. `--auto-deploy` and `--keep-state` are accepted and ignored. Do not run `clarinet devnet start` alongside `stacksdapp dev`.
+
+Guide: [Local devnet](/local-devnet)
 
 ## generate
 
@@ -150,7 +150,7 @@ stacksdapp deploy --network testnet --yes
 | `--dry-run` | Print plan and estimated fee without broadcasting |
 | `-y`, `--yes` | Non-interactive (required for CI and agents) |
 | `--wait-confirm` | Poll until confirmed on-chain (testnet/mainnet) |
-| `--no-auto-version` | Fail instead of renaming on collision (`counter-v2`, etc.) |
+| `--no-auto-version` | Fail instead of renaming on collision (`counter` → `counter-v2`) on devnet, testnet, and mainnet |
 
 Guides: [testnet](/testnet) · [mainnet](/mainnet) · [local devnet](/local-devnet)
 
@@ -162,6 +162,8 @@ stacksdapp check
 stacksdapp clean
 stacksdapp clean --force
 ```
+
+`clean` removes generated bindings and local cache files. A running devnet is restored to Clarinet's snapshot and left up. Clean waits until Stacks mines a new block, and restarts only the signer if the tip does not move. With no devnet running, the next `stacksdapp dev` starts fresh. See [Local devnet](/local-devnet).
 
 ## init, upgrade, doctor
 

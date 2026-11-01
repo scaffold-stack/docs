@@ -46,7 +46,7 @@ See also: [Quickstart](/quickstart)
 ```bash
 # edit contracts/contracts/*.clar
 stacksdapp check
-stacksdapp generate        # or stacksdapp dev (includes watcher)
+stacksdapp generate        # or stacksdapp generate --watch
 stacksdapp test
 stacksdapp deploy --network testnet --yes
 ```
@@ -112,23 +112,18 @@ Full guide: [Adopt an existing project](/adopt-existing)
 
 ## Local devnet
 
-Requires Docker Desktop.
+Requires Docker Desktop and Clarinet 3.23+.
 
 ```bash
-stacksdapp doctor
-stacksdapp dev --auto-deploy
+stacksdapp dev                              # terminal 1 — Clarinet chain
+stacksdapp deploy --network devnet          # terminal 2 — once the chain is up
+stacksdapp dev --network devnet             # terminal 3 — Next.js at localhost:3000
 ```
 
-- Boots Clarinet devnet + Next.js + file watcher
-- `--auto-deploy` deploys contracts once `:20443` is healthy (recommended)
-- Devnet mnemonics in `settings/Devnet.toml` are public — devnet only
-
-**Deploy separately:**
-
-```bash
-stacksdapp dev                    # terminal 1
-stacksdapp deploy --network devnet --yes   # terminal 2, soon after boot
-```
+- Terminal 1 is only the chain. It does not start Next.js or deploy.
+- The debug UI says **Choose Wallet** and lists the funded accounts in `settings/Devnet.toml`.
+- A name already on that chain is versioned (`counter` → `counter-v2`), including after you restart the toolchain.
+- Those mnemonics are public. Devnet only.
 
 Guide: [Local devnet](/local-devnet)
 
@@ -165,7 +160,7 @@ stacksdapp deploy --network testnet --yes
 
 Use `--json` for machine-readable output. Rely on [exit codes](/cli/commands#exit-codes).
 
-Do not run devnet in CI unless Docker is available and stall risk is acceptable.
+Do not run devnet in CI unless Docker is available. Prefer testnet for deploy checks.
 
 ## Clean slate
 
@@ -173,15 +168,20 @@ Do not run devnet in CI unless Docker is available and stall risk is acceptable.
 stacksdapp clean --force
 ```
 
-Removes `.cache/`, devnet state, and generated bindings. Does not delete `.clar` sources.
+Removes generated bindings and local cache files. Does not delete `.clar` sources.
+
+When a devnet is running, clean restores that chain to the snapshot and leaves the process up. It waits until Stacks mines a new block. If the tip does not move, it restarts only the signer. Deploy after that finishes.
+
+When no devnet is running, clean deletes the cache so the next `stacksdapp dev` starts fresh.
 
 After clean: `stacksdapp generate` to restore bindings.
 
 ## Redeploy / naming collisions
 
-By default, redeploying auto-versions (`counter` → `counter-v2`). To fail instead:
+By default, redeploying auto-versions (`counter` → `counter-v2`) on devnet, testnet, and mainnet. Chain state on devnet survives a toolchain restart. To fail instead:
 
 ```bash
+stacksdapp deploy --network devnet --no-auto-version
 stacksdapp deploy --network testnet --no-auto-version --yes
 ```
 

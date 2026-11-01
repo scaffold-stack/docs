@@ -119,7 +119,7 @@ NEXT_PUBLIC_NETWORK=devnet   # devnet | testnet | mainnet
 # NEXT_PUBLIC_HIRO_API_KEY=...      # optional Hiro API key for read calls
 ```
 
-`stacksdapp dev --network testnet` updates `.env.local` automatically.
+`stacksdapp dev --network devnet`, `--network testnet`, and `--network mainnet` each write `NEXT_PUBLIC_NETWORK` in `.env.local`.
 
 Import `scaffoldConfig` from `@/scaffold.config` for `network`, `nodeUrl`, `isDevnet`, `isTestnet`, and `getReadOnlyNetwork()`.
 
@@ -127,10 +127,10 @@ Import `scaffoldConfig` from `@/scaffold.config` for `network`, `nodeUrl`, `isDe
 
 | Network | Public (write) calls | Read-only calls |
 | --- | --- | --- |
-| **devnet** | `lib/devnet.ts` — public burner keys, no wallet popup | RPC via local node |
-| **testnet/mainnet** | `@stacks/connect` wallet popup | RPC via Hiro |
+| **devnet** | **Choose Wallet** — funded accounts from `Devnet.toml`, signed in `lib/devnet.ts` | Same-origin `/devnet-node` rewrite to `127.0.0.1:20443` |
+| **testnet/mainnet** | **Connect Wallet** — Leather or Xverse | RPC via Hiro |
 
-**Do not** expect Leather/Xverse to sign devnet writes. Devnet uses template burner mnemonics from `contracts/settings/Devnet.toml`.
+**Do not** expect Leather or Xverse on devnet. Choose Wallet lists the public burner accounts from `contracts/settings/Devnet.toml`.
 
 <Warning>
   Never reuse devnet burner mnemonics on testnet or mainnet.
@@ -205,12 +205,12 @@ SIP-010 amounts are **base units**. Divide by `10**decimals` for human display.
 | Cause | Fix |
 | --- | --- |
 | Network env mismatch | Set `NEXT_PUBLIC_NETWORK=testnet` after testnet deploy; restart Next.js |
-| Devnet node down | Run `stacksdapp dev` (Docker). Do not use `npm run dev` alone on devnet |
+| Devnet node down | `stacksdapp dev` for the chain, then `stacksdapp dev --network devnet` for Next.js. `npm run dev` alone does not start the chain |
 | Contract not deployed | Check `deployments.json`; run `stacksdapp deploy --network testnet --yes` |
 | Invalid principal arg | Guard: only call when wallet address is valid `ST…` / `SP…` |
 | Hiro rate limit | Add `NEXT_PUBLIC_HIRO_API_KEY` in `.env.local` |
 
-**Agent rule:** After `stacksdapp deploy --network testnet`, run `stacksdapp dev --network testnet` (not bare `stacksdapp dev` which defaults to devnet).
+**Agent rule:** After `stacksdapp deploy --network testnet`, run `stacksdapp dev --network testnet`. Bare `stacksdapp dev` starts the local Clarinet chain and does not open the testnet UI.
 
 Pre-flight:
 
@@ -288,16 +288,16 @@ Working examples of custom UIs: `AirdropApp.tsx` and `VotingApp.tsx` in [Example
 | Mistake | Fix |
 | --- | --- |
 | Edit `generated/hooks.ts` | Run `stacksdapp generate` |
-| Expect wallet popup on devnet | Devnet uses burners in `lib/devnet.ts` |
+| Expect Leather/Xverse on devnet | The button is **Choose Wallet**. It uses burners in `lib/devnet.ts` |
 | Call contract before deploy | Deploy first; check `deployments.json` |
 | Wrong network in wallet vs app | Match wallet network to `NEXT_PUBLIC_NETWORK` |
 | Skip `"use client"` in hook components | Hooks require client components |
 | `BigInt(hook.data)` on read-only uint | Unwrap cvToJSON shape first |
 | `stacksdapp dev` after testnet deploy | Use `stacksdapp dev --network testnet` |
-| `npm run dev` alone on devnet | Needs `stacksdapp dev` for local node at `localhost:3999` |
+| `npm run dev` alone on devnet | That script is bare `stacksdapp dev` (the chain). Open the UI with `stacksdapp dev --network devnet`. Core RPC is `127.0.0.1:20443` |
 
 ## Live reload
 
-- **`stacksdapp dev`** (devnet): file watcher regenerates bindings on `.clar` changes
-- **`stacksdapp dev --network testnet`**: run `stacksdapp generate --watch` in a second terminal
+- **`stacksdapp dev`** does not watch contracts or start Next.js
+- **Any frontend** (`--network devnet`, `testnet`, or `mainnet`): run `stacksdapp generate --watch` in another terminal when you want bindings to follow `.clar` edits
 - After regenerate, refresh hook imports in your components

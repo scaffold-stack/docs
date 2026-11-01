@@ -33,7 +33,7 @@ Regenerate on every `.clar` change without the full `dev` supervisor:
 stacksdapp generate --watch
 ```
 
-During `stacksdapp dev`, the file watcher already regenerates bindings on save.
+`stacksdapp generate --watch` regenerates bindings when you save a contract. `stacksdapp dev` does not.
 
 ## How it works
 
@@ -149,12 +149,20 @@ stacksdapp deploy --network testnet
 stacksdapp deploy --network devnet
 ```
 
-## File watcher during dev
+## File watcher
+
+`stacksdapp dev` does not watch contracts. Run this in another terminal:
+
+```bash
+stacksdapp generate --watch
+```
+
+The watcher:
 
 1. Monitors `.clar` files
 2. Debounces rapid edits
 3. Runs code generation
-4. Triggers Next.js hot reload
+4. Lets Next.js hot reload pick up the new bindings
 
 <Warning>
   Do not edit files under `frontend/src/generated/` by hand. They are overwritten on the next generate.

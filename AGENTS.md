@@ -66,7 +66,7 @@ Every navigable page should help users find Scaffold Stacks via search (Google, 
 
 - Put walkthroughs, layout examples, and tutorials in **Guides** (sidebar groups)
 - Keep **CLI reference** (`cli/commands`) to syntax, flags, and short links into Guides
-- Document Clarinet **3.23+**, Clarity 6 default, `doctor --strict`, git hooks, agent skill, `dev --auto-deploy`, ABI cache, `generate --watch`, `--clarity-version`, `--yes` deploy
+- Document Clarinet **3.23+**, Clarity 6 default, `doctor --strict`, git hooks, agent skill, the three-command devnet flow (`stacksdapp dev`, then `deploy --network devnet`, then `dev --network devnet`), ABI cache, `generate --watch`, `--clarity-version`, `--yes` deploy. `--auto-deploy` and `--keep-state` are ignored
 - Include guides: quickstart, workflows, adopt-existing, upgrade, project-layout, frontend, sip-standards, clarity-language, troubleshooting
 - Include sample contracts and testing patterns
 - Cover deployment workflows (testnet / mainnet / local-devnet)

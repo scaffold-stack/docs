@@ -35,7 +35,7 @@ Root `package.json` scripts:
 
 | Script | Command |
 | --- | --- |
-| `npm run dev` | `stacksdapp dev` |
+| `npm run dev` | `stacksdapp dev` (Clarinet chain only; UI is `stacksdapp dev --network …`) |
 | `npm run generate` | `stacksdapp generate` |
 | `npm run deploy` | `stacksdapp deploy` |
 | `npm run test` | `stacksdapp test` |
@@ -109,7 +109,7 @@ frontend/
 | `frontend/src/components/**` | Yes | Normal frontend dev |
 | `frontend/src/generated/**` | **No** | `stacksdapp generate` |
 | `contracts/settings/Testnet.toml` | Yes (local) | Never commit real mnemonics |
-| `contracts/.cache/**` | No | Deleted by `stacksdapp clean` |
+| `contracts/.cache/**` | No | Cleared by `stacksdapp clean`. The live devnet session stays while that chain is running |
 
 ## Environment variables
 
@@ -121,7 +121,7 @@ NEXT_PUBLIC_NETWORK=devnet          # devnet | testnet | mainnet
 # NEXT_PUBLIC_HIRO_API_KEY=...       # optional Hiro API key
 ```
 
-`stacksdapp dev` and deploy update network-related env as needed.
+`stacksdapp dev --network devnet|testnet|mainnet` writes `NEXT_PUBLIC_NETWORK`. Bare `stacksdapp dev` starts the Clarinet chain and does not change the frontend env.
 
 Frontend hooks, wallet, and signing: [Frontend guide](/frontend)
 

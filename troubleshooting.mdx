@@ -62,8 +62,8 @@ No scaffold-stacks project found...
 
 | Symptom | Action |
 | --- | --- |
-| Deploy never confirms | Chain may be stalled; use `--auto-deploy` or [testnet](/testnet) |
-| Port in use | Stop parallel `clarinet devnet start`; `stacksdapp clean --force` |
+| `ContractAlreadyExists` | Redeploy. The CLI versions the name (`counter` → `counter-v2`). Chain state survives a toolchain restart |
+| Port in use | Stop parallel `clarinet devnet start`; stop leftover containers; start `stacksdapp dev` again |
 | Epoch burn wait | Expected for C5/C6; wait or use testnet |
 
 ## Devnet issues
@@ -76,21 +76,18 @@ waiting for bitcoin-node / stacks-node...
 
 1. Ensure Docker is running
 2. Stop conflicting containers: `docker ps --filter name=devnet -q | xargs docker stop`
-3. `stacksdapp clean --force`
-4. Retry `stacksdapp dev --auto-deploy`
-5. Do not run manual `clarinet devnet start` alongside `stacksdapp dev`
+3. Start the chain again: `stacksdapp dev`
+4. Do not run `clarinet devnet start` alongside `stacksdapp dev`
 
-### Stall after ~block 71
+`stacksdapp clean --force` deletes generated bindings and local cache files. It does not stop Docker. When a devnet is running, clean restores that chain to the snapshot, leaves the process up, and waits until Stacks mines a new block. If the tip does not move, it restarts only the signer. Deploy after clean finishes. Then run `stacksdapp generate`.
 
-Known issue with long-running local devnet (PoX / signer timeout).
+### Chain stops at the first PoX reward cycle
 
-**Workarounds:**
+On Clarinet older than 3.26, stacks-node 4.0.1 stops mining at the first PoX reward-cycle boundary after the epoch 4.0 snapshot (around burn height 180). `stacksdapp dev` already points that devnet at stacks-node 4.0.5, stakes the devnet wallets, and mines a Bitcoin block if the chain goes quiet.
 
-- Deploy early: `stacksdapp dev --auto-deploy`
-- Use [testnet](/testnet) for deploy verification
-- Full reset: `stacksdapp clean --force`, restart Docker, retry
+Clarinet 3.26 and newer run their own devnet. You do not pass extra flags.
 
-Testnet and mainnet deploy are unaffected. See [Local devnet](/local-devnet).
+If the tip still does not move, use [testnet](/testnet). Testnet and mainnet deploy are unaffected. See [Local devnet](/local-devnet).
 
 ## Clarity version / epoch mismatch
 
@@ -145,7 +142,7 @@ Browser could not reach the Stacks node — not a contract revert.
 
 | Failed request host | Fix |
 | --- | --- |
-| `localhost:3999` | Run `stacksdapp dev` (Docker), or switch to testnet: `NEXT_PUBLIC_NETWORK=testnet` + restart Next.js |
+| `localhost:3000/devnet-node` or `127.0.0.1:20443` | Start the chain with `stacksdapp dev`, then the UI with `stacksdapp dev --network devnet` |
 | `api.testnet.hiro.so` | Check connectivity; add `NEXT_PUBLIC_HIRO_API_KEY`; disable ad-blocker |
 | Contract deployed but still fails | Verify `deployments.json` has the contract and `ST…` prefix matches testnet |
 
@@ -153,7 +150,7 @@ Browser could not reach the Stacks node — not a contract revert.
 
 1. `cat frontend/src/generated/deployments.json` — contract entry exists
 2. `grep NEXT_PUBLIC_NETWORK frontend/.env.local` — matches deploy network
-3. After testnet deploy: `stacksdapp dev --network testnet` (not default devnet)
+3. After testnet deploy: `stacksdapp dev --network testnet` (bare `stacksdapp dev` is the local chain, not the testnet UI)
 4. Guard read-only `call()` until wallet address is valid; show `hook.error`
 
 Full patterns: [Frontend guide](/frontend)

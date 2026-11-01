@@ -1,136 +1,142 @@
 ---
 title: "Local devnet"
-description: "Run a local Stacks blockchain with Docker and stacksdapp dev — optional auto-deploy for fast Clarity smart contract iteration without testnet fees."
+description: "Run Clarinet's local Stacks chain with stacksdapp dev, deploy from a second terminal, and open the Next.js debug UI with Choose Wallet."
 keywords: ["Stacks devnet", "Stacks local development", "stacksdapp dev", "Clarinet devnet", "Docker Stacks", "Scaffold Stacks"]
 ---
 
-Run a complete Bitcoin and Stacks development environment locally with Docker.
+Run a local Bitcoin and Stacks chain with Docker, then point the Next.js debug UI at it. The chain, the deploy, and the frontend are three separate commands.
 
 ## Contents
 
 - [Requirements](#requirements)
-- [Start devnet](#start-devnet)
-- [Auto-deploy](#auto-deploy)
+- [Start the chain](#start-the-chain)
+- [Deploy contracts](#deploy-contracts)
+- [Open the frontend](#open-the-frontend)
 - [Pre-funded accounts](#pre-funded-accounts)
-- [Development workflow](#development-workflow)
-- [Stop devnet](#stop-devnet)
+- [Redeploy](#redeploy)
+- [Clarinet versions](#clarinet-versions)
+- [Stop and reset](#stop-and-reset)
 - [When to use devnet](#when-to-use-devnet)
-- [Limitations](#limitations)
 
 ## Requirements
 
 | Requirement | Notes |
 | --- | --- |
 | Docker Desktop | Installed and running |
-| Clarinet | 3.23+ (required for Clarity 6 / epoch 4.0 devnet) |
+| Clarinet | 3.23+ (Clarity 6 / epoch 4.0) |
 | RAM | 8 GB+ recommended |
-
-Verify with:
 
 ```bash
 stacksdapp doctor
 ```
 
-## Start devnet
+## Start the chain
+
+In the first terminal:
 
 ```bash
 stacksdapp dev
 ```
 
-This starts:
+This terminal is Clarinet's devnet. Leave it running. It starts the Bitcoin node, stacks-node, and stacks-signer. It does not start Next.js, watch contract files, or deploy.
 
-- Bitcoin node
-- Stacks node
-- Frontend at `http://localhost:3000`
-- File watcher for auto-regeneration
-- Chain health monitoring (prefixed `[dev]` logs)
+<Warning>
+  Do not run `clarinet devnet start` in another terminal. It uses the same ports.
+</Warning>
 
-Deploy contracts in a second terminal once the node is ready (~30s):
+`--auto-deploy` and `--keep-state` are accepted and ignored. Deploy with `stacksdapp deploy`. Reset a running chain with `stacksdapp clean`.
+
+## Deploy contracts
+
+Wait until Clarinet is serving the chain, then in a second terminal:
 
 ```bash
 stacksdapp deploy --network devnet
 ```
 
-<Warning>
-  Do not run `clarinet devnet start` alongside `stacksdapp dev`. They conflict on ports.
-</Warning>
+Devnet waits until each contract is on the local node at `http://127.0.0.1:20443`. It does not ask for the testnet confirmation prompt.
 
-## Auto-deploy
+## Open the frontend
 
-Deploy once the local chain is healthy. No second terminal required.
+In a third terminal, after the chain is up:
 
 ```bash
-stacksdapp dev --auto-deploy
+stacksdapp dev --network devnet
 ```
 
-The supervisor waits for the devnet node, then runs deploy automatically. Recommended for reliable local deploy verification.
+The app is at `http://localhost:3000`. This command only starts Next.js. It writes `NEXT_PUBLIC_NETWORK=devnet` in `frontend/.env.local`.
 
-Preserve devnet cache between runs:
+The debug UI says **Choose Wallet** and lists the funded devnet accounts with balances. Testnet and mainnet still use **Connect Wallet** (Leather or Xverse).
+
+Browser calls go through the Next.js rewrite `/devnet-node` to stacks-core on port `20443`. Stacks-api on port `3999` is off.
+
+Regenerate bindings yourself when you edit contracts. `stacksdapp dev` does not watch files:
 
 ```bash
-stacksdapp dev --keep-state
+stacksdapp generate --watch
 ```
 
 ## Pre-funded accounts
 
-Devnet includes pre-funded accounts in `contracts/settings/Devnet.toml`:
+`contracts/settings/Devnet.toml` ships public burner accounts (`deployer`, `wallet_1`, `wallet_2`, `wallet_3`). Choose Wallet uses those keys. No real STX and no browser wallet are required.
 
-```toml
-[accounts.deployer]
-mnemonic = "twice kind fence tip hidden tilt action fragile skin nothing glory cousin green tomorrow spring wrist shed math olympic multiply hip blue scout claw"
-balance = 100_000_000_000_000
-
-[accounts.wallet_1]
-mnemonic = "sell invite acquire kitten bamboo drastic jelly vivid peace spawn twice guilt pave pen trash pretty park cube fragile unaware remain midnight betray rebuild"
-balance = 100_000_000_000_000
-```
-
-The devnet settings also include **PoX stacking orders** required for the epoch 4.0 snapshot. Do not remove them or override epoch heights.
+The same file includes the PoX stacking orders the epoch 4.0 snapshot expects. Leave those orders and the epoch heights as they are.
 
 <Warning>
-  These are public burner mnemonics for local use only. The settings file includes a CLI warning. Never reuse them on testnet or mainnet, and never commit real deployer seeds.
+  These mnemonics are public and local-only. Never reuse them on testnet or mainnet, and never commit a real deployer seed.
 </Warning>
 
-No real STX or external wallet is required for basic debug UI flows on devnet.
+## Redeploy
 
-## Development workflow
+Stacks contracts are immutable. If the name is already on this devnet, deploy versions it (`counter` → `counter-v2` → `counter-v3`) and updates references. That includes a contract left on chain after you stop and start `stacksdapp dev` again. Clarinet keeps the chain.
 
-- Edit `.clar` files. Bindings regenerate automatically.
-- ABI cache in `contracts/.cache/` skips unchanged work.
-- Deploy with `--auto-deploy` or `stacksdapp deploy --network devnet`.
-- Test with pre-funded accounts.
+```bash
+stacksdapp deploy --network devnet
+```
 
-After contract changes on devnet, set `NEXT_PUBLIC_NETWORK=devnet` in `frontend/.env.local`. If you deployed to testnet instead, use `stacksdapp dev --network testnet`.
+Fail instead of renaming:
 
-## Stop devnet
+```bash
+stacksdapp deploy --network devnet --no-auto-version
+```
+
+`stacksdapp clean` resets a running devnet back to the snapshot and leaves the process up. It waits until Stacks mines a new block before it finishes, so the next deploy uses the current contract name. You do not need it for a normal redeploy.
+
+## Clarinet versions
+
+Clarinet **3.23 or 3.24** starts stacks-node 4.0.1, which stops mining at the first PoX reward-cycle boundary after the epoch 4.0 snapshot. `stacksdapp dev` points that devnet at stacks-node and stacks-signer 4.0.5, keeps Clarinet's devnet sBTC settings, stakes the devnet wallets before the next reward cycle, and mines one Bitcoin block when the chain has been quiet. Clarinet's miner takes over once it is running.
+
+Clarinet **3.26 and newer** already ships that node. `stacksdapp dev` leaves the chain to Clarinet: no image pin, no extra miner, and no extra stake.
+
+Testnet and mainnet are unchanged.
+
+## Stop and reset
+
+Stop the chain with Ctrl+C in the `stacksdapp dev` terminal so Clarinet can shut its containers down.
+
+To delete generated files and reset the local chain:
 
 ```bash
 stacksdapp clean
-stacksdapp clean --force    # skip confirmation
+stacksdapp clean --force
 ```
 
-Stops services and removes generated and devnet state.
+This removes `frontend/src/generated`, old files under `contracts/.cache`, and `contracts/.devnet`. It does not stop Docker or delete `.clar` sources.
 
-If devnet boot stalls:
+When a devnet is running, clean restores that chain to Clarinet's snapshot and leaves the Clarinet process up. It waits until Stacks mines a new block before it returns. If the tip does not move, it restarts only the signer. Wait for that to finish, then run `stacksdapp deploy --network devnet`. The deploy publishes the current contract name.
 
-1. Ensure Docker is running
-2. Stop conflicting containers: `docker ps --filter name=devnet -q | xargs docker stop`
-3. `stacksdapp clean --force`
-4. Retry `stacksdapp dev --auto-deploy`
+When no devnet is running, clean deletes the local cache so the next `stacksdapp dev` starts a fresh chain. Starting `stacksdapp dev` still stops leftover containers.
+
+Run `stacksdapp generate` afterward to restore bindings.
+
+If boot cannot grab its ports:
+
+1. Make sure Docker is running.
+2. Stop leftover containers: `docker ps --filter name=devnet -q | xargs docker stop`
+3. Start again with `stacksdapp dev`.
 
 ## When to use devnet
 
-- Complex multi-contract interactions
-- Bitcoin-specific features (sBTC, block data)
-- Offline development
-- Full stack simulation
+Use devnet for offline work and for trying the debug UI against a local chain. Use [testnet](/testnet) when you want a public network, a browser wallet, and a deploy you can share.
 
-For deploy verification, **testnet is more reliable** than long-running local devnet.
-
-## Limitations
-
-- Slower than testnet (Docker overhead)
-- No real economic incentives
-- Limited to local machine
-- Long idle devnet sessions can stall around Stacks block ~71 (PoX / signer timeout). Prefer `--auto-deploy` or use testnet for deploy verification
-- Devnet `bitcoin_controller_block_time` is set to 45s to allow Nakamoto signer time through PoX reward-cycle transitions
+Devnet blocks are slower than testnet because Bitcoin blocks are paced at 45 seconds so the signer can cross PoX reward cycles.

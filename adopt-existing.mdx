@@ -130,10 +130,12 @@ stacksdapp test
 stacksdapp deploy --network testnet --yes
 ```
 
-For local development with auto-deploy:
+For local devnet, start the chain, deploy, then open the UI:
 
 ```bash
-stacksdapp dev --auto-deploy
+stacksdapp dev
+stacksdapp deploy --network devnet
+stacksdapp dev --network devnet
 ```
 
 After cloning, enable git hooks:
